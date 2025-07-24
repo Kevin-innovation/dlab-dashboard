@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Student, CreateStudentInput, ClassType, ClassDuration, PaymentType, RoboticsDay, Subject } from '../../types/student'
-import { mockDataStore } from '../../stores/mockDataStore'
+import {
+  Student,
+  CreateStudentInput,
+  ClassType,
+  ClassDuration,
+  PaymentType,
+  RoboticsDay,
+  Subject,
+} from '../../types/student'
+import { useAuth } from '../../contexts/AuthContext'
+import { StudentService } from '../../services/studentService'
 
 interface StudentFormProps {
   student?: Student
@@ -9,6 +18,7 @@ interface StudentFormProps {
 }
 
 export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
+  const { teacher } = useAuth()
   const [formData, setFormData] = useState<CreateStudentInput>({
     name: student?.name ?? '',
     grade: student?.grade ?? '',
@@ -21,7 +31,7 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
     payment_day: 1,
     payment_type: 'monthly',
     robotics_option: false,
-    robotics_day: undefined
+    robotics_day: undefined,
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,9 +41,14 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
     setError(null)
     setLoading(true)
 
+    if (!teacher) {
+      setError('로그인 정보를 확인할 수 없습니다.')
+      setLoading(false)
+      return
+    }
+
     try {
-      // Mock 데이터 스토어를 사용하여 학생 추가
-      const newStudent = mockDataStore.addStudent({
+      const newStudent = await StudentService.createStudent(teacher.id, {
         name: formData.name,
         parent_name: formData.parent_name,
         parent_phone: formData.parent_phone,
@@ -45,7 +60,7 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         payment_day: formData.payment_day,
         payment_type: formData.payment_type,
         robotics_option: formData.robotics_option || false,
-        robotics_day: formData.robotics_option ? formData.robotics_day : null
+        robotics_day: formData.robotics_option ? formData.robotics_day : null,
       })
 
       console.log('학생 추가 성공:', newStudent)
@@ -58,14 +73,20 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type } = e.target
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'payment_day' ? parseInt(value) : 
-              name === 'class_duration' ? parseFloat(value) as ClassDuration :
-              name === 'robotics_option' ? (e.target as HTMLInputElement).checked :
-              value
+      [name]:
+        name === 'payment_day'
+          ? parseInt(value)
+          : name === 'class_duration'
+            ? (parseFloat(value) as ClassDuration)
+            : name === 'robotics_option'
+              ? (e.target as HTMLInputElement).checked
+              : value,
     }))
   }
 
@@ -73,7 +94,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">이름</label>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            이름
+          </label>
           <input
             type="text"
             id="name"
@@ -86,7 +109,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
 
         <div>
-          <label htmlFor="class_type" className="block text-sm font-medium text-gray-700">수업 유형</label>
+          <label htmlFor="class_type" className="block text-sm font-medium text-gray-700">
+            수업 유형
+          </label>
           <select
             id="class_type"
             name="class_type"
@@ -101,7 +126,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
 
         <div>
-          <label htmlFor="subject" className="block text-sm font-medium text-gray-700">수업 과목</label>
+          <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
+            수업 과목
+          </label>
           <select
             id="subject"
             name="subject"
@@ -121,7 +148,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
 
         <div>
-          <label htmlFor="class_duration" className="block text-sm font-medium text-gray-700">수업 시간</label>
+          <label htmlFor="class_duration" className="block text-sm font-medium text-gray-700">
+            수업 시간
+          </label>
           <select
             id="class_duration"
             name="class_duration"
@@ -137,7 +166,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
 
         <div>
-          <label htmlFor="parent_name" className="block text-sm font-medium text-gray-700">학부모 이름</label>
+          <label htmlFor="parent_name" className="block text-sm font-medium text-gray-700">
+            학부모 이름
+          </label>
           <input
             type="text"
             id="parent_name"
@@ -150,7 +181,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
 
         <div>
-          <label htmlFor="parent_phone" className="block text-sm font-medium text-gray-700">학부모 연락처</label>
+          <label htmlFor="parent_phone" className="block text-sm font-medium text-gray-700">
+            학부모 연락처
+          </label>
           <input
             type="tel"
             id="parent_phone"
@@ -163,7 +196,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
 
         <div>
-          <label htmlFor="payment_day" className="block text-sm font-medium text-gray-700">결제일</label>
+          <label htmlFor="payment_day" className="block text-sm font-medium text-gray-700">
+            결제일
+          </label>
           <input
             type="number"
             id="payment_day"
@@ -178,7 +213,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
 
         <div>
-          <label htmlFor="payment_type" className="block text-sm font-medium text-gray-700">결제 기간</label>
+          <label htmlFor="payment_type" className="block text-sm font-medium text-gray-700">
+            결제 기간
+          </label>
           <select
             id="payment_type"
             name="payment_type"
@@ -193,7 +230,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
 
         <div>
-          <label htmlFor="grade" className="block text-sm font-medium text-gray-700">학년</label>
+          <label htmlFor="grade" className="block text-sm font-medium text-gray-700">
+            학년
+          </label>
           <input
             type="text"
             id="grade"
@@ -220,10 +259,13 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
               로보틱스 수업 참여 (미선택 시 10% 할인)
             </label>
           </div>
-          
+
           {formData.robotics_option && (
             <div className="mb-4">
-              <label htmlFor="robotics_day" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="robotics_day"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 로보틱스 수업 요일
               </label>
               <select
@@ -243,7 +285,9 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
 
         <div className="md:col-span-2">
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700">비고</label>
+          <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+            비고
+          </label>
           <textarea
             id="notes"
             name="notes"
@@ -256,9 +300,7 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         </div>
       </div>
 
-      {error && (
-        <div className="text-red-500 text-sm">{error}</div>
-      )}
+      {error && <div className="text-red-500 text-sm">{error}</div>}
 
       <div className="flex justify-end space-x-3">
         <button
@@ -268,14 +310,10 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         >
           취소
         </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary"
-        >
-          {loading ? '저장 중...' : (student ? '수정' : '추가')}
+        <button type="submit" disabled={loading} className="btn-primary">
+          {loading ? '저장 중...' : student ? '수정' : '추가'}
         </button>
       </div>
     </form>
   )
-} 
+}

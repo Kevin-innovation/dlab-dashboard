@@ -21,7 +21,7 @@ export function StudentsPage() {
   const handleFormSubmit = () => {
     setShowForm(false)
     setSelectedStudent(undefined)
-    setRefreshKey(prev => prev + 1) // 목록 새로고침 트리거
+    setRefreshKey((prev) => prev + 1) // 목록 새로고침 트리거
   }
 
   const handleFormCancel = () => {
@@ -47,4 +47,4 @@ export function StudentsPage() {
       )}
     </div>
   )
-} 
+}

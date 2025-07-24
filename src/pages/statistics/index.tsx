@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { StudentWithClass } from '../../types/student'
-import { WeeklyStatistics, MonthlyStatistics, StatisticsPerformance, ChartDataPoint } from '../../types/statistics'
+import {
+  WeeklyStatistics,
+  MonthlyStatistics,
+  StatisticsPerformance,
+  ChartDataPoint,
+} from '../../types/statistics'
 import { StatisticsCalculator } from '../../utils/statisticsCalculator'
-import { 
+import {
   ChartBarIcon,
   UserGroupIcon,
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   CalendarIcon,
-  AcademicCapIcon
+  AcademicCapIcon,
 } from '@heroicons/react/24/outline'
 
 interface StatCardProps {
@@ -31,7 +36,7 @@ function StatCard({ title, value, subtitle, change, icon: Icon, color }: StatCar
     green: 'bg-green-50 text-green-600 border-green-200',
     yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200',
     purple: 'bg-purple-50 text-purple-600 border-purple-200',
-    red: 'bg-red-50 text-red-600 border-red-200'
+    red: 'bg-red-50 text-red-600 border-red-200',
   }
 
   const getTrendIcon = () => {
@@ -47,17 +52,21 @@ function StatCard({ title, value, subtitle, change, icon: Icon, color }: StatCar
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {subtitle && (
-            <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
           {change && (
             <div className="flex items-center mt-2 text-sm">
               {getTrendIcon()}
-              <span className={`ml-1 ${
-                change.trend === 'up' ? 'text-green-600' :
-                change.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-              }`}>
-                {change.value > 0 ? '+' : ''}{change.value.toFixed(1)}%
+              <span
+                className={`ml-1 ${
+                  change.trend === 'up'
+                    ? 'text-green-600'
+                    : change.trend === 'down'
+                      ? 'text-red-600'
+                      : 'text-gray-600'
+                }`}
+              >
+                {change.value > 0 ? '+' : ''}
+                {change.value.toFixed(1)}%
               </span>
             </div>
           )}
@@ -77,9 +86,9 @@ interface DonutChartProps {
 function DonutChart({ data, title, centerText }: DonutChartProps) {
   const total = data.reduce((sum, item) => sum + item.value, 0)
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
-  
+
   let cumulativePercentage = 0
-  
+
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <h3 className="text-lg font-medium text-gray-900 mb-4">{title}</h3>
@@ -90,9 +99,9 @@ function DonutChart({ data, title, centerText }: DonutChartProps) {
               const percentage = (item.value / total) * 100
               const strokeDasharray = `${percentage * 2.51} 251.2` // 2π * 40 = 251.2
               const strokeDashoffset = -cumulativePercentage * 2.51
-              
+
               cumulativePercentage += percentage
-              
+
               return (
                 <circle
                   key={index}
@@ -121,7 +130,7 @@ function DonutChart({ data, title, centerText }: DonutChartProps) {
         <div className="ml-6 space-y-2">
           {data.map((item, index) => (
             <div key={index} className="flex items-center">
-              <div 
+              <div
                 className="w-3 h-3 rounded-full mr-2"
                 style={{ backgroundColor: colors[index % colors.length] }}
               />
@@ -153,12 +162,12 @@ function PerformanceGauge({ title, current, target, unit = '' }: PerformanceGaug
   const isExcellent = percentage >= 105
   const isGood = percentage >= 95
   const color = isExcellent ? 'green' : isGood ? 'blue' : percentage >= 85 ? 'yellow' : 'red'
-  
+
   const colorClasses = {
     green: 'text-green-600 bg-green-100',
     blue: 'text-blue-600 bg-blue-100',
     yellow: 'text-yellow-600 bg-yellow-100',
-    red: 'text-red-600 bg-red-100'
+    red: 'text-red-600 bg-red-100',
   }
 
   return (
@@ -167,18 +176,28 @@ function PerformanceGauge({ title, current, target, unit = '' }: PerformanceGaug
       <div className="space-y-4">
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">현재</span>
-          <span className="font-medium">{current.toLocaleString()}{unit}</span>
+          <span className="font-medium">
+            {current.toLocaleString()}
+            {unit}
+          </span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">목표</span>
-          <span className="font-medium">{target.toLocaleString()}{unit}</span>
+          <span className="font-medium">
+            {target.toLocaleString()}
+            {unit}
+          </span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
-          <div 
+          <div
             className={`h-3 rounded-full transition-all duration-500 ${
-              color === 'green' ? 'bg-green-500' :
-              color === 'blue' ? 'bg-blue-500' :
-              color === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+              color === 'green'
+                ? 'bg-green-500'
+                : color === 'blue'
+                  ? 'bg-blue-500'
+                  : color === 'yellow'
+                    ? 'bg-yellow-500'
+                    : 'bg-red-500'
             }`}
             style={{ width: `${Math.min(percentage, 100)}%` }}
           />
@@ -209,7 +228,7 @@ export default function StatisticsPage() {
   async function fetchDataAndCalculateStatistics() {
     try {
       setLoading(true)
-      
+
       // Temporary: Use mock data for development
       const mockStudents = [
         {
@@ -220,18 +239,20 @@ export default function StatisticsPage() {
           notes: '수학에 관심이 많음',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          student_classes: [{
-            class_type: '1:1' as const,
-            payment_type: 'monthly' as const,
-            robotics_option: true,
-            class_duration: 60,
-            payment_day: 15,
-            classes: {
-              name: '파이썬 기초',
-              type: '1:1' as const,
-              duration: '1 hour'
-            }
-          }]
+          student_classes: [
+            {
+              class_type: '1:1' as const,
+              payment_type: 'monthly' as const,
+              robotics_option: true,
+              class_duration: 60,
+              payment_day: 15,
+              classes: {
+                name: '파이썬 기초',
+                type: '1:1' as const,
+                duration: '1 hour',
+              },
+            },
+          ],
         },
         {
           id: '2',
@@ -241,18 +262,20 @@ export default function StatisticsPage() {
           notes: '게임 개발에 관심있음',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          student_classes: [{
-            class_type: 'group' as const,
-            payment_type: 'quarterly' as const,
-            robotics_option: false,
-            class_duration: 90,
-            payment_day: 1,
-            classes: {
-              name: '자바스크립트',
-              type: 'group' as const,
-              duration: '1.5 hours'
-            }
-          }]
+          student_classes: [
+            {
+              class_type: 'group' as const,
+              payment_type: 'quarterly' as const,
+              robotics_option: false,
+              class_duration: 90,
+              payment_day: 1,
+              classes: {
+                name: '자바스크립트',
+                type: 'group' as const,
+                duration: '1.5 hours',
+              },
+            },
+          ],
         },
         {
           id: '3',
@@ -262,23 +285,25 @@ export default function StatisticsPage() {
           notes: '웹 개발 희망',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          student_classes: [{
-            class_type: 'group' as const,
-            payment_type: 'monthly' as const,
-            robotics_option: true,
-            class_duration: 120,
-            payment_day: 10,
-            classes: {
-              name: 'HTML/CSS',
-              type: 'group' as const,
-              duration: '2 hours'
-            }
-          }]
-        }
+          student_classes: [
+            {
+              class_type: 'group' as const,
+              payment_type: 'monthly' as const,
+              robotics_option: true,
+              class_duration: 120,
+              payment_day: 10,
+              classes: {
+                name: 'HTML/CSS',
+                type: 'group' as const,
+                duration: '2 hours',
+              },
+            },
+          ],
+        },
       ]
-      
+
       setStudents(mockStudents)
-      
+
       // TODO: Uncomment when Supabase is properly configured
       /*
       const { data, error } = await supabase
@@ -304,7 +329,7 @@ export default function StatisticsPage() {
       // 통계 계산
       const weeklyStatistics = StatisticsCalculator.calculateWeeklyStatistics(mockStudents || [])
       const monthlyStatistics = StatisticsCalculator.calculateMonthlyStatistics(mockStudents || [])
-      
+
       // 성과 지표 계산 (목표값은 임시 설정)
       const performanceMetrics = StatisticsCalculator.calculatePerformanceMetrics(
         mockStudents || [],
@@ -318,7 +343,6 @@ export default function StatisticsPage() {
       setMonthlyStats(monthlyStatistics)
       setPerformance(performanceMetrics)
       setChartData(charts)
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.')
     } finally {
@@ -327,12 +351,13 @@ export default function StatisticsPage() {
   }
 
   if (loading) return <div className="text-center py-8">로딩 중...</div>
-  if (error) return (
-    <div className="text-red-500 p-4 rounded-md bg-red-50 mb-4">
-      <p className="font-bold">오류 발생</p>
-      <p>{error}</p>
-    </div>
-  )
+  if (error)
+    return (
+      <div className="text-red-500 p-4 rounded-md bg-red-50 mb-4">
+        <p className="font-bold">오류 발생</p>
+        <p>{error}</p>
+      </div>
+    )
 
   const currentStats = viewMode === 'week' ? weeklyStats : monthlyStats
   if (!currentStats || !performance || !chartData) return null
@@ -347,8 +372,8 @@ export default function StatisticsPage() {
             <button
               onClick={() => setViewMode('week')}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                viewMode === 'week' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
+                viewMode === 'week'
+                  ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -357,17 +382,15 @@ export default function StatisticsPage() {
             <button
               onClick={() => setViewMode('month')}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                viewMode === 'month' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
+                viewMode === 'month'
+                  ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               월간
             </button>
           </div>
-          <button className="btn-primary">
-            통계 설정
-          </button>
+          <button className="btn-primary">통계 설정</button>
         </div>
       </div>
 
@@ -486,7 +509,9 @@ export default function StatisticsPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">학생당 평균 수입:</span>
-                  <span className="font-medium">₩{performance.revenue_per_student.toLocaleString()}</span>
+                  <span className="font-medium">
+                    ₩{performance.revenue_per_student.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -509,8 +534,8 @@ export default function StatisticsPage() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">출석률:</span>
                   <span className="font-medium">
-                    {'attendance_rate' in currentStats 
-                      ? `${currentStats.attendance_rate}%` 
+                    {'attendance_rate' in currentStats
+                      ? `${currentStats.attendance_rate}%`
                       : `${currentStats.average_attendance_rate}%`}
                   </span>
                 </div>

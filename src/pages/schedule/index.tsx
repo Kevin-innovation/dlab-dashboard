@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { WeeklySchedule } from '../../components/schedule/WeeklySchedule'
 import { ClassForm } from '../../components/schedule/ClassForm'
 import { AttendanceForm } from '../../components/schedule/AttendanceForm'
-import { ScheduleWithDetails } from '../../types/class'
+import { ScheduleWithClass } from '../../services/scheduleService'
+import { ChevronLeftIcon } from '@heroicons/react/24/outline'
 
 export function SchedulePage() {
   const [showClassForm, setShowClassForm] = useState(false)
   const [showAttendanceForm, setShowAttendanceForm] = useState(false)
-  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleWithDetails | undefined>()
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleWithClass | undefined>()
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const weeklyScheduleRef = useRef<{ fetchSchedules: () => void }>(null)
 
   const handleAddSchedule = () => {
     setSelectedSchedule(undefined)
@@ -16,7 +18,7 @@ export function SchedulePage() {
     setShowAttendanceForm(false)
   }
 
-  const handleScheduleClick = (scheduleData: ScheduleWithDetails) => {
+  const handleScheduleClick = (scheduleData: ScheduleWithClass) => {
     setSelectedSchedule(scheduleData)
     setShowAttendanceForm(true)
     setShowClassForm(false)
@@ -25,6 +27,10 @@ export function SchedulePage() {
   const handleClassFormSubmit = () => {
     setShowClassForm(false)
     setSelectedSchedule(undefined)
+    // 스케줄 목록 새로고침
+    if (weeklyScheduleRef.current) {
+      weeklyScheduleRef.current.fetchSchedules()
+    }
   }
 
   const handleClassFormCancel = () => {
@@ -35,9 +41,19 @@ export function SchedulePage() {
   const handleAttendanceFormSubmit = () => {
     setShowAttendanceForm(false)
     setSelectedSchedule(undefined)
+    // 스케줄 목록 새로고침
+    if (weeklyScheduleRef.current) {
+      weeklyScheduleRef.current.fetchSchedules()
+    }
   }
 
   const handleAttendanceFormCancel = () => {
+    setShowAttendanceForm(false)
+    setSelectedSchedule(undefined)
+  }
+
+  const handleBackToSchedule = () => {
+    setShowClassForm(false)
     setShowAttendanceForm(false)
     setSelectedSchedule(undefined)
   }
@@ -53,10 +69,7 @@ export function SchedulePage() {
             onChange={(e) => setSelectedDate(e.target.value)}
             className="input-field"
           />
-          <button
-            onClick={handleAddSchedule}
-            className="btn-primary"
-          >
+          <button onClick={handleAddSchedule} className="btn-primary">
             새 수업 일정 추가
           </button>
         </div>
@@ -64,9 +77,18 @@ export function SchedulePage() {
 
       {showClassForm ? (
         <div className="card">
-          <h3 className="text-xl font-bold mb-6">
-            {selectedSchedule ? '수업 일정 수정' : '새 수업 일정 추가'}
-          </h3>
+          <div className="flex items-center mb-6">
+            <button
+              onClick={handleBackToSchedule}
+              className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
+            >
+              <ChevronLeftIcon className="h-5 w-5 mr-1" />
+              뒤로가기
+            </button>
+            <h3 className="text-xl font-bold">
+              {selectedSchedule ? '수업 일정 수정' : '새 수업 일정 추가'}
+            </h3>
+          </div>
           <ClassForm
             scheduleData={selectedSchedule}
             onSubmit={handleClassFormSubmit}
@@ -75,7 +97,16 @@ export function SchedulePage() {
         </div>
       ) : showAttendanceForm && selectedSchedule ? (
         <div className="card">
-          <h3 className="text-xl font-bold mb-6">출석 관리</h3>
+          <div className="flex items-center mb-6">
+            <button
+              onClick={handleBackToSchedule}
+              className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
+            >
+              <ChevronLeftIcon className="h-5 w-5 mr-1" />
+              뒤로가기
+            </button>
+            <h3 className="text-xl font-bold">출석 관리</h3>
+          </div>
           <AttendanceForm
             scheduleData={selectedSchedule}
             date={selectedDate}
@@ -84,8 +115,8 @@ export function SchedulePage() {
           />
         </div>
       ) : (
-        <WeeklySchedule onScheduleClick={handleScheduleClick} />
+        <WeeklySchedule ref={weeklyScheduleRef} onScheduleClick={handleScheduleClick} />
       )}
     </div>
   )
-} 
+}

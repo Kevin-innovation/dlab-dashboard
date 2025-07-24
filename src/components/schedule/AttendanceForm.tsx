@@ -1,150 +1,109 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
-import { Class } from '../../types/class'
-import { Attendance, CreateAttendanceInput, ATTENDANCE_STATUS_LABELS } from '../../types/class'
+import { useState } from 'react'
+import { ScheduleWithClass } from '../../services/scheduleService'
 
 interface AttendanceFormProps {
-  classData: Class
+  scheduleData: ScheduleWithClass
   date: string
   onSubmit: () => void
   onCancel: () => void
 }
 
-export function AttendanceForm({ classData, date, onSubmit, onCancel }: AttendanceFormProps) {
-  const [attendance, setAttendance] = useState<Attendance | null>(null)
-  const [formData, setFormData] = useState<CreateAttendanceInput>({
-    class_id: classData.id,
-    student_id: classData.student_id,
-    date: date,
-    status: 'present',
-    notes: ''
-  })
+export function AttendanceForm({ scheduleData, date, onSubmit, onCancel }: AttendanceFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([])
 
-  useEffect(() => {
-    fetchAttendance()
-  }, [classData.id, date])
-
-  async function fetchAttendance() {
-    try {
-      const { data, error } = await supabase
-        .from('attendance')
-        .select('*')
-        .eq('class_id', classData.id)
-        .eq('date', date)
-        .single()
-      
-      if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows returned
-      
-      if (data) {
-        setAttendance(data)
-        setFormData({
-          class_id: data.class_id,
-          student_id: data.student_id,
-          date: data.date,
-          status: data.status,
-          makeup_class_id: data.makeup_class_id,
-          notes: data.notes ?? ''
-        })
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '출석 정보를 불러오는데 실패했습니다.')
-    }
+  const handleStudentToggle = (studentId: string) => {
+    setSelectedStudents(prev => 
+      prev.includes(studentId) 
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
     setLoading(true)
+    setError(null)
 
     try {
-      if (attendance?.id) {
-        // 수정
-        const { error } = await supabase
-          .from('attendance')
-          .update(formData)
-          .eq('id', attendance.id)
-        
-        if (error) throw error
-      } else {
-        // 추가
-        const { error } = await supabase
-          .from('attendance')
-          .insert([formData])
-        
-        if (error) throw error
-      }
-
+      // TODO: 실제 출석 데이터 저장 로직 구현
+      console.log('출석 처리:', {
+        scheduleId: scheduleData.id,
+        date,
+        presentStudents: selectedStudents
+      })
+      
+      // 임시로 성공 처리
       onSubmit()
     } catch (err) {
-      setError(err instanceof Error ? err.message : '출석 정보 저장에 실패했습니다.')
+      setError(err instanceof Error ? err.message : '출석 처리에 실패했습니다.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 gap-6">
-        <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700">출석 상태</label>
-          <select
-            id="status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            required
-            className="input-field mt-1"
-          >
-            {Object.entries(ATTENDANCE_STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700">비고</label>
-          <textarea
-            id="notes"
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            rows={3}
-            className="input-field mt-1"
-            placeholder="특이사항이 있다면 입력해주세요."
-          />
+    <div className="space-y-6">
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="font-medium text-gray-900 mb-2">수업 정보</h4>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-500">과목:</span> {scheduleData.classes?.subject}
+          </div>
+          <div>
+            <span className="text-gray-500">타입:</span> {scheduleData.classes?.type}
+          </div>
+          <div>
+            <span className="text-gray-500">날짜:</span> {date}
+          </div>
+          <div>
+            <span className="text-gray-500">시간:</span> {scheduleData.start_time}
+          </div>
         </div>
       </div>
 
-      {error && (
-        <div className="text-red-500 text-sm">{error}</div>
-      )}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <h4 className="font-medium text-gray-900 mb-4">학생 출석 체크</h4>
+          <div className="space-y-3">
+            {scheduleData.students && scheduleData.students.length > 0 ? (
+              scheduleData.students.map(student => (
+                <label key={student.id} className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedStudents.includes(student.id)}
+                    onChange={() => handleStudentToggle(student.id)}
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-900">
+                    {student.name} ({student.grade})
+                  </span>
+                </label>
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm">등록된 학생이 없습니다.</p>
+            )}
+          </div>
+        </div>
 
-      <div className="flex justify-end space-x-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-        >
-          취소
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary"
-        >
-          {loading ? '저장 중...' : (attendance ? '수정' : '추가')}
-        </button>
-      </div>
-    </form>
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="text-red-800 text-sm">
+              <strong>오류:</strong> {error}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end space-x-3">
+          <button type="button" onClick={onCancel} className="btn-secondary">
+            취소
+          </button>
+          <button type="submit" disabled={loading} className="btn-primary">
+            {loading ? '처리 중...' : '출석 처리'}
+          </button>
+        </div>
+      </form>
+    </div>
   )
-} 
+}

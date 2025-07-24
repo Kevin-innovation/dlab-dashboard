@@ -29,16 +29,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50">
         <div className="text-center p-8 bg-white rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">
-            접근 권한이 없습니다
-          </h2>
-          <p className="text-gray-600 mb-4">
-            선생님 계정으로만 접근할 수 있습니다.
-          </p>
-          <button
-            onClick={() => navigate('/login')}
-            className="btn-primary"
-          >
+          <h2 className="text-xl font-semibold text-red-600 mb-4">접근 권한이 없습니다</h2>
+          <p className="text-gray-600 mb-4">선생님 계정으로만 접근할 수 있습니다.</p>
+          <button onClick={() => navigate('/login')} className="btn-primary">
             로그인 페이지로 돌아가기
           </button>
         </div>
@@ -47,4 +40,4 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>
-} 
+}

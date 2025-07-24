@@ -27,21 +27,15 @@ export function Header({ onMenuClick }: HeaderProps) {
             <Bars3Icon className="h-6 w-6" />
           </button>
           <div className="flex items-center space-x-3">
-            <img 
-              src="/src/img/dlab logo.png" 
-              alt="D.LAB CODING 로고" 
-              className="h-8 w-auto"
-            />
+            <img src="/src/img/dlab logo.png" alt="D.LAB CODING 로고" className="h-8 w-auto" />
             <span className="text-xl font-bold text-gray-900">수성캠퍼스</span>
           </div>
           <div className="hidden sm:flex flex-col">
-            <span className="text-sm font-medium text-gray-900">
-              {teacher?.name || '선생님'}
-            </span>
+            <span className="text-sm font-medium text-gray-900">{teacher?.name || '선생님'}</span>
             <span className="text-xs text-gray-500">{user?.email}</span>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           <button
             type="button"
@@ -50,7 +44,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             <span className="sr-only">알림</span>
             <BellIcon className="h-6 w-6" />
           </button>
-          
+
           <button
             onClick={handleSignOut}
             className="text-sm font-medium text-gray-700 hover:text-gray-800 px-3 py-1 rounded-md hover:bg-gray-100"
@@ -61,4 +55,4 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
     </header>
   )
-} 
+}

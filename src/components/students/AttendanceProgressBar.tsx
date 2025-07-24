@@ -21,7 +21,7 @@ export function AttendanceProgressBar({
   paymentType,
   onAttendanceCheck,
   onUndoAttendance,
-  onResetAttendance
+  onResetAttendance,
 }: AttendanceProgressBarProps) {
   // 피드백 라인 위치 계산
   const feedbackLinePosition = (feedbackThreshold / total) * 100
@@ -49,9 +49,7 @@ export function AttendanceProgressBar({
       {/* 상태 및 출석 체크 버튼 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <span className={`text-xs font-medium ${getStatusTextColor()}`}>
-            {getStatusText()}
-          </span>
+          <span className={`text-xs font-medium ${getStatusTextColor()}`}>{getStatusText()}</span>
           <span className="text-xs text-gray-500">
             {current}/{total}회 ({percentage.toFixed(0)}%)
           </span>
@@ -96,7 +94,7 @@ export function AttendanceProgressBar({
         {/* 배경 바 */}
         <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
           {/* 진행률 바 */}
-          <div 
+          <div
             className={`h-full transition-all duration-500 ease-out ${getStatusColor()}`}
             style={{ width: `${Math.min(percentage, 100)}%` }}
           />
@@ -104,7 +102,7 @@ export function AttendanceProgressBar({
 
         {/* 피드백 기간 표시선 (빨간 선) */}
         {!isComplete && (
-          <div 
+          <div
             className="absolute top-0 w-0.5 h-3 bg-red-500"
             style={{ left: `${feedbackLinePosition}%` }}
             title="피드백 기간 시작점"
@@ -117,13 +115,17 @@ export function AttendanceProgressBar({
             const week = i + 1
             return (
               <div key={week} className="flex flex-col items-center">
-                <div className={`w-2 h-2 rounded-full border-2 ${
-                  week <= current 
-                    ? (isComplete ? 'bg-green-500 border-green-500' : 
-                       isFeedbackPeriod ? 'bg-yellow-500 border-yellow-500' : 
-                       'bg-blue-500 border-blue-500')
-                    : 'bg-white border-gray-300'
-                }`} />
+                <div
+                  className={`w-2 h-2 rounded-full border-2 ${
+                    week <= current
+                      ? isComplete
+                        ? 'bg-green-500 border-green-500'
+                        : isFeedbackPeriod
+                          ? 'bg-yellow-500 border-yellow-500'
+                          : 'bg-blue-500 border-blue-500'
+                      : 'bg-white border-gray-300'
+                  }`}
+                />
                 {(week === feedbackThreshold || week === total) && (
                   <span className="text-xs text-gray-400 mt-1">
                     {week === feedbackThreshold ? '피드백' : '완료'}
@@ -139,7 +141,11 @@ export function AttendanceProgressBar({
       {isFeedbackPeriod && !isComplete && (
         <div className="flex items-center space-x-1 text-xs text-yellow-700 bg-yellow-50 p-2 rounded-md">
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
           </svg>
           <span>수업 종료 1주일 전입니다. 피드백 준비 시기입니다.</span>
         </div>
@@ -149,7 +155,11 @@ export function AttendanceProgressBar({
       {isComplete && (
         <div className="flex items-center space-x-1 text-xs text-green-700 bg-green-50 p-2 rounded-md">
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
           </svg>
           <span>수업이 완료되었습니다. 다음 결제 주기를 확인해주세요.</span>
         </div>

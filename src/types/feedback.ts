@@ -79,7 +79,7 @@ export const DEFAULT_TEMPLATES: Omit<FeedbackTemplate, 'id' | 'created_at' | 'up
 【숙제 현황】
 {{homework_status}}
 
-감사합니다.`
+감사합니다.`,
   },
   {
     name: '칭찬 중심 피드백',
@@ -101,7 +101,7 @@ export const DEFAULT_TEMPLATES: Omit<FeedbackTemplate, 'id' | 'created_at' | 'up
 
 앞으로도 {{student_name}} 학생의 성장을 함께 지켜보겠습니다.
 
-감사합니다.`
+감사합니다.`,
   },
   {
     name: '개선 중심 피드백',
@@ -128,8 +128,8 @@ export const DEFAULT_TEMPLATES: Omit<FeedbackTemplate, 'id' | 'created_at' | 'up
 
 함께 {{student_name}} 학생의 성장을 도와주세요.
 
-감사합니다.`
-  }
+감사합니다.`,
+  },
 ]
 
 // API 설정
@@ -138,7 +138,7 @@ export const GPT_API_CONFIG = {
   max_tokens: 500,
   temperature: 0.7,
   presence_penalty: 0.1,
-  frequency_penalty: 0.1
+  frequency_penalty: 0.1,
 } as const
 
 // 에러 타입

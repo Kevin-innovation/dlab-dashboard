@@ -1,62 +1,48 @@
-import { useState, useEffect } from 'react'
-import { ScheduleWithDetails, DAY_OF_WEEK_LABELS, CLASS_STATUS_COLORS, CLASS_STATUS_LABELS } from '../../types/class'
-import { Student } from '../../types/student'
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import {
+  ScheduleWithDetails,
+  DAY_OF_WEEK_LABELS,
+  CLASS_STATUS_COLORS,
+  CLASS_STATUS_LABELS,
+} from '../../types/class'
 import { useAuth } from '../../contexts/AuthContext'
-import { mockDataStore } from '../../stores/mockDataStore'
+import { ScheduleService, ScheduleWithClass } from '../../services/scheduleService'
 
 interface WeeklyScheduleProps {
-  onScheduleClick: (scheduleData: ScheduleWithDetails) => void
+  onScheduleClick: (scheduleData: ScheduleWithClass) => void
 }
 
-export function WeeklySchedule({ onScheduleClick }: WeeklyScheduleProps) {
-  const [schedules, setSchedules] = useState<ScheduleWithDetails[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const { teacher } = useAuth()
+export const WeeklySchedule = forwardRef<{ fetchSchedules: () => void }, WeeklyScheduleProps>(
+  ({ onScheduleClick }, ref) => {
+    const [schedules, setSchedules] = useState<ScheduleWithClass[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const { teacher } = useAuth()
 
-  useEffect(() => {
-    if (teacher?.id) {
-      fetchSchedules()
-    }
-  }, [teacher])
+    useImperativeHandle(ref, () => ({
+      fetchSchedules
+    }))
 
-  async function fetchSchedules() {
+    useEffect(() => {
+      if (teacher?.id) {
+        fetchSchedules()
+      }
+    }, [teacher])
+
+    async function fetchSchedules() {
+    if (!teacher) return
+
     try {
       setLoading(true)
-      
-      // Mock 데이터 스토어에서 스케줄 가져오기
-      mockDataStore.initialize()
-      const mockSchedules = mockDataStore.getSchedules()
-      
-      // ScheduleWithDetails 형식으로 변환
-      const scheduleData: ScheduleWithDetails[] = mockSchedules.map(schedule => ({
-        ...schedule,
-        classes: schedule.class_info ? {
-          id: schedule.class_info.id,
-          name: schedule.class_info.name,
-          type: schedule.class_info.type,
-          subject: schedule.class_info.subject,
-          duration: schedule.class_info.duration,
-          created_at: schedule.class_info.created_at,
-          updated_at: schedule.class_info.updated_at
-        } : undefined,
-        teachers: {
-          id: teacher!.id,
-          name: teacher!.name,
-          email: teacher!.email,
-          created_at: teacher!.created_at,
-          updated_at: teacher!.updated_at
-        },
-        attendance: []
-      }))
-      
-      console.log('Mock 스케줄 데이터 로드됨:', scheduleData)
-      setSchedules(scheduleData)
-      
+      setError(null)
+
+      const schedulesData = await ScheduleService.getSchedulesByTeacher(teacher.id)
+      console.log('실제 DB에서 스케줄 데이터 로드됨:', schedulesData)
+      setSchedules(schedulesData)
     } catch (err) {
       console.error('스케줄 로드 오류:', err)
       setError(
-        err instanceof Error 
+        err instanceof Error
           ? `수업 일정을 불러오는데 실패했습니다: ${err.message}`
           : '수업 일정을 불러오는데 실패했습니다.'
       )
@@ -71,19 +57,20 @@ export function WeeklySchedule({ onScheduleClick }: WeeklyScheduleProps) {
   })
 
   const getSchedulesForDayAndTime = (day: number, time: string) => {
-    return schedules.filter(s => {
+    return schedules.filter((s) => {
       const scheduleHour = parseInt(s.start_time.split(':')[0])
       return s.day_of_week === day && scheduleHour === parseInt(time.split(':')[0])
     })
   }
 
   if (loading) return <div className="text-center">로딩 중...</div>
-  if (error) return (
-    <div className="text-red-500 p-4 rounded-md bg-red-50 mb-4">
-      <p className="font-bold">오류 발생</p>
-      <p>{error}</p>
-    </div>
-  )
+  if (error)
+    return (
+      <div className="text-red-500 p-4 rounded-md bg-red-50 mb-4">
+        <p className="font-bold">오류 발생</p>
+        <p>{error}</p>
+      </div>
+    )
 
   return (
     <div className="overflow-x-auto">
@@ -99,14 +86,14 @@ export function WeeklySchedule({ onScheduleClick }: WeeklyScheduleProps) {
           </tr>
         </thead>
         <tbody>
-          {timeSlots.map(time => (
+          {timeSlots.map((time) => (
             <tr key={time}>
               <td className="border p-2 text-center bg-gray-50">{time}</td>
               {DAY_OF_WEEK_LABELS.map((_, dayIndex) => {
                 const daySchedules = getSchedulesForDayAndTime(dayIndex, time)
                 return (
                   <td key={dayIndex} className="border p-2">
-                    {daySchedules.map(scheduleData => (
+                    {daySchedules.map((scheduleData) => (
                       <div
                         key={scheduleData.id}
                         className={`mb-1 p-2 rounded cursor-pointer transition-colors hover:opacity-80 ${CLASS_STATUS_COLORS[scheduleData.status]}`}
@@ -121,9 +108,9 @@ export function WeeklySchedule({ onScheduleClick }: WeeklyScheduleProps) {
                         <div className="text-xs opacity-75">
                           {CLASS_STATUS_LABELS[scheduleData.status]}
                         </div>
-                        {scheduleData.attendance && scheduleData.attendance.length > 0 && (
+                        {scheduleData.students && scheduleData.students.length > 0 && (
                           <div className="text-xs mt-1 opacity-75">
-                            출석: {scheduleData.attendance.filter(a => a.status === 'present').length}명
+                            학생: {scheduleData.students.map(s => s.name).join(', ')}
                           </div>
                         )}
                       </div>
@@ -137,4 +124,4 @@ export function WeeklySchedule({ onScheduleClick }: WeeklyScheduleProps) {
       </table>
     </div>
   )
-} 
+})

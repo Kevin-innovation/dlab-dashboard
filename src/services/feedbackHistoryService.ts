@@ -21,7 +21,7 @@ export class FeedbackHistoryService {
       feedback_content: feedbackContent,
       created_at: new Date().toISOString(),
       template_used: templateUsed,
-      token_usage: tokenUsage
+      token_usage: tokenUsage,
     }
 
     const history = this.getHistory()
@@ -42,7 +42,7 @@ export class FeedbackHistoryService {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY)
       if (!stored) return []
-      
+
       const parsed = JSON.parse(stored)
       return Array.isArray(parsed) ? parsed : []
     } catch (error) {
@@ -55,7 +55,7 @@ export class FeedbackHistoryService {
    * 특정 학생의 피드백 히스토리 조회
    */
   static getHistoryByStudent(studentName: string): FeedbackHistory[] {
-    return this.getHistory().filter(item => item.student_name === studentName)
+    return this.getHistory().filter((item) => item.student_name === studentName)
   }
 
   /**
@@ -64,8 +64,8 @@ export class FeedbackHistoryService {
   static getHistoryByDateRange(startDate: string, endDate: string): FeedbackHistory[] {
     const start = new Date(startDate)
     const end = new Date(endDate)
-    
-    return this.getHistory().filter(item => {
+
+    return this.getHistory().filter((item) => {
       const itemDate = new Date(item.created_at)
       return itemDate >= start && itemDate <= end
     })
@@ -75,7 +75,7 @@ export class FeedbackHistoryService {
    * 피드백 삭제
    */
   static deleteFeedback(id: string): void {
-    const history = this.getHistory().filter(item => item.id !== id)
+    const history = this.getHistory().filter((item) => item.id !== id)
     this.saveToStorage(history)
   }
 
@@ -97,35 +97,36 @@ export class FeedbackHistoryService {
     average_feedback_length: number
   } {
     const history = this.getHistory()
-    
+
     if (history.length === 0) {
       return {
         total_feedbacks: 0,
         total_tokens: 0,
         estimated_cost: 0,
         most_active_student: null,
-        average_feedback_length: 0
+        average_feedback_length: 0,
       }
     }
 
     // 총 토큰 수 계산
     const totalTokens = history.reduce((sum, item) => sum + (item.token_usage || 0), 0)
-    
+
     // 예상 비용 계산 (동적 모델별 계산)
-    const estimatedCost = totalTokens > 0 ? 
-      (import.meta.env.VITE_OPENAI_MODEL === 'gpt-4o-mini' ? 
-        (totalTokens / 1000) * 0.0003 : // GPT-4o mini
-        (totalTokens / 1000) * 0.002    // GPT-3.5-turbo
-      ) : 0
+    const estimatedCost =
+      totalTokens > 0
+        ? import.meta.env.VITE_OPENAI_MODEL === 'gpt-4o-mini'
+          ? (totalTokens / 1000) * 0.0003 // GPT-4o mini
+          : (totalTokens / 1000) * 0.002 // GPT-3.5-turbo
+        : 0
 
     // 가장 활발한 학생 찾기
     const studentCounts: Record<string, number> = {}
-    history.forEach(item => {
+    history.forEach((item) => {
       studentCounts[item.student_name] = (studentCounts[item.student_name] || 0) + 1
     })
-    
-    const mostActiveStudent = Object.entries(studentCounts)
-      .sort(([, a], [, b]) => b - a)[0]?.[0] || null
+
+    const mostActiveStudent =
+      Object.entries(studentCounts).sort(([, a], [, b]) => b - a)[0]?.[0] || null
 
     // 평균 피드백 길이
     const totalLength = history.reduce((sum, item) => sum + item.feedback_content.length, 0)
@@ -136,7 +137,7 @@ export class FeedbackHistoryService {
       total_tokens: totalTokens,
       estimated_cost: estimatedCost,
       most_active_student: mostActiveStudent,
-      average_feedback_length: averageLength
+      average_feedback_length: averageLength,
     }
   }
 
@@ -159,12 +160,13 @@ export class FeedbackHistoryService {
       }
 
       // 데이터 유효성 검사
-      const validData = imported.filter(item => 
-        item && 
-        typeof item.id === 'string' &&
-        typeof item.student_name === 'string' &&
-        typeof item.feedback_content === 'string' &&
-        typeof item.created_at === 'string'
+      const validData = imported.filter(
+        (item) =>
+          item &&
+          typeof item.id === 'string' &&
+          typeof item.student_name === 'string' &&
+          typeof item.feedback_content === 'string' &&
+          typeof item.created_at === 'string'
       )
 
       this.saveToStorage(validData)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { 
+import {
   ChatBubbleLeftRightIcon,
   CogIcon,
   DocumentTextIcon,
@@ -7,11 +7,17 @@ import {
   SparklesIcon,
   ExclamationTriangleIcon,
   BookmarkIcon,
-  ChartBarIcon
+  ChartBarIcon,
 } from '@heroicons/react/24/outline'
 import { GPTService } from '../../services/gptService'
 import { FeedbackHistoryService } from '../../services/feedbackHistoryService'
-import { DEFAULT_TEMPLATES, FeedbackFormData, FeedbackTemplate, GPTFeedbackResponse, FeedbackHistory } from '../../types/feedback'
+import {
+  DEFAULT_TEMPLATES,
+  FeedbackFormData,
+  FeedbackTemplate,
+  GPTFeedbackResponse,
+  FeedbackHistory,
+} from '../../types/feedback'
 import { StudentWithClass } from '../../types/student'
 
 interface APIKeySettingsProps {
@@ -38,7 +44,7 @@ function APIKeySettings({ isOpen, onClose, onSave, currentApiKey }: APIKeySettin
     try {
       const isValid = await GPTService.validateApiKey(apiKey.trim())
       setValidationResult(isValid ? 'valid' : 'invalid')
-      
+
       if (isValid) {
         onSave(apiKey.trim())
         setTimeout(() => {
@@ -59,12 +65,10 @@ function APIKeySettings({ isOpen, onClose, onSave, currentApiKey }: APIKeySettin
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <h3 className="text-lg font-semibold mb-4">OpenAI API 키 설정</h3>
-        
+
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              API 키
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">API 키</label>
             <input
               type="password"
               value={apiKey}
@@ -78,28 +82,24 @@ function APIKeySettings({ isOpen, onClose, onSave, currentApiKey }: APIKeySettin
           </div>
 
           {validationResult && (
-            <div className={`p-3 rounded-md ${
-              validationResult === 'valid' 
-                ? 'bg-green-50 text-green-700' 
-                : 'bg-red-50 text-red-700'
-            }`}>
-              {validationResult === 'valid' ? '✅ 유효한 API 키입니다.' : '❌ 유효하지 않은 API 키입니다.'}
+            <div
+              className={`p-3 rounded-md ${
+                validationResult === 'valid'
+                  ? 'bg-green-50 text-green-700'
+                  : 'bg-red-50 text-red-700'
+              }`}
+            >
+              {validationResult === 'valid'
+                ? '✅ 유효한 API 키입니다.'
+                : '❌ 유효하지 않은 API 키입니다.'}
             </div>
           )}
 
           <div className="flex space-x-3 pt-4">
-            <button
-              onClick={onClose}
-              className="btn-secondary flex-1"
-              disabled={isValidating}
-            >
+            <button onClick={onClose} className="btn-secondary flex-1" disabled={isValidating}>
               취소
             </button>
-            <button
-              onClick={handleSave}
-              className="btn-primary flex-1"
-              disabled={isValidating}
-            >
+            <button onClick={handleSave} className="btn-primary flex-1" disabled={isValidating}>
               {isValidating ? '검증 중...' : '저장'}
             </button>
           </div>
@@ -119,18 +119,20 @@ export default function FeedbackPage() {
       notes: '수학에 관심이 많음',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      student_classes: [{
-        class_type: '1:1' as const,
-        payment_type: 'monthly' as const,
-        robotics_option: true,
-        class_duration: 60,
-        payment_day: 15,
-        classes: {
-          name: '파이썬 기초',
-          type: '1:1' as const,
-          duration: '1 hour'
-        }
-      }]
+      student_classes: [
+        {
+          class_type: '1:1' as const,
+          payment_type: 'monthly' as const,
+          robotics_option: true,
+          class_duration: 60,
+          payment_day: 15,
+          classes: {
+            name: '파이썬 기초',
+            type: '1:1' as const,
+            duration: '1 hour',
+          },
+        },
+      ],
     },
     {
       id: '2',
@@ -140,19 +142,21 @@ export default function FeedbackPage() {
       notes: '게임 개발에 관심있음',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      student_classes: [{
-        class_type: 'group' as const,
-        payment_type: 'quarterly' as const,
-        robotics_option: false,
-        class_duration: 90,
-        payment_day: 1,
-        classes: {
-          name: '자바스크립트',
-          type: 'group' as const,
-          duration: '1.5 hours'
-        }
-      }]
-    }
+      student_classes: [
+        {
+          class_type: 'group' as const,
+          payment_type: 'quarterly' as const,
+          robotics_option: false,
+          class_duration: 90,
+          payment_day: 1,
+          classes: {
+            name: '자바스크립트',
+            type: 'group' as const,
+            duration: '1.5 hours',
+          },
+        },
+      ],
+    },
   ])
 
   const [templates] = useState<FeedbackTemplate[]>(
@@ -160,7 +164,7 @@ export default function FeedbackPage() {
       ...template,
       id: (index + 1).toString(),
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     }))
   )
 
@@ -172,7 +176,7 @@ export default function FeedbackPage() {
     attendance_notes: '',
     homework_status: '',
     template_id: '',
-    custom_format: ''
+    custom_format: '',
   })
 
   const [generatedFeedback, setGeneratedFeedback] = useState<string>('')
@@ -191,7 +195,7 @@ export default function FeedbackPage() {
       setApiKey(savedApiKey)
       GPTService.setApiKey(savedApiKey)
     }
-    
+
     // 피드백 히스토리 로드
     setFeedbackHistory(FeedbackHistoryService.getHistory())
   }, [])
@@ -202,8 +206,8 @@ export default function FeedbackPage() {
     localStorage.setItem('openai_api_key', newApiKey)
   }
 
-  const selectedStudent = students.find(s => s.id === formData.student_id)
-  const selectedTemplate = templates.find(t => t.id === formData.template_id)
+  const selectedStudent = students.find((s) => s.id === formData.student_id)
+  const selectedTemplate = templates.find((t) => t.id === formData.template_id)
 
   const handleGenerateFeedback = async () => {
     if (!GPTService.hasApiKey()) {
@@ -225,13 +229,13 @@ export default function FeedbackPage() {
         class_name: selectedStudent?.student_classes?.[0]?.classes?.name || '',
         lesson_content: formData.lesson_content,
         student_performance: formData.student_performance,
-        custom_format: formData.custom_format
+        custom_format: formData.custom_format,
       }
 
       const response: GPTFeedbackResponse = await GPTService.generateFeedback(request)
       setGeneratedFeedback(response.feedback)
       setApiResponse(response)
-      
+
       // 히스토리에 저장
       FeedbackHistoryService.saveFeedback(
         selectedStudent!.name,
@@ -240,10 +244,9 @@ export default function FeedbackPage() {
         selectedTemplate?.name,
         response.token_usage.total_tokens
       )
-      
+
       // 히스토리 업데이트
       setFeedbackHistory(FeedbackHistoryService.getHistory())
-
     } catch (err) {
       setError(err instanceof Error ? err.message : '피드백 생성 중 오류가 발생했습니다.')
     } finally {
@@ -259,12 +262,15 @@ export default function FeedbackPage() {
         lesson_content: formData.lesson_content,
         student_performance: formData.student_performance,
         attendance_notes: formData.attendance_notes || '특이사항 없음',
-        homework_status: formData.homework_status || '숙제 완료'
+        homework_status: formData.homework_status || '숙제 완료',
       }
 
-      const filledTemplate = GPTService.replaceTemplateVariables(selectedTemplate.content, variables)
+      const filledTemplate = GPTService.replaceTemplateVariables(
+        selectedTemplate.content,
+        variables
+      )
       setGeneratedFeedback(filledTemplate)
-      
+
       // 템플릿 사용도 히스토리에 저장
       FeedbackHistoryService.saveFeedback(
         selectedStudent.name,
@@ -272,7 +278,7 @@ export default function FeedbackPage() {
         filledTemplate,
         selectedTemplate.name
       )
-      
+
       setFeedbackHistory(FeedbackHistoryService.getHistory())
     }
   }
@@ -295,8 +301,8 @@ export default function FeedbackPage() {
             <button
               onClick={() => setShowHistory(false)}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                !showHistory 
-                  ? 'bg-white text-gray-900 shadow-sm' 
+                !showHistory
+                  ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -305,8 +311,8 @@ export default function FeedbackPage() {
             <button
               onClick={() => setShowHistory(true)}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                showHistory 
-                  ? 'bg-white text-gray-900 shadow-sm' 
+                showHistory
+                  ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -337,7 +343,9 @@ export default function FeedbackPage() {
                       <ChatBubbleLeftRightIcon className="h-8 w-8 text-blue-500" />
                       <div className="ml-3">
                         <p className="text-sm font-medium text-gray-600">총 피드백</p>
-                        <p className="text-2xl font-semibold text-gray-900">{stats.total_feedbacks}</p>
+                        <p className="text-2xl font-semibold text-gray-900">
+                          {stats.total_feedbacks}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -346,7 +354,9 @@ export default function FeedbackPage() {
                       <ChartBarIcon className="h-8 w-8 text-green-500" />
                       <div className="ml-3">
                         <p className="text-sm font-medium text-gray-600">사용 토큰</p>
-                        <p className="text-2xl font-semibold text-gray-900">{stats.total_tokens.toLocaleString()}</p>
+                        <p className="text-2xl font-semibold text-gray-900">
+                          {stats.total_tokens.toLocaleString()}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -355,7 +365,9 @@ export default function FeedbackPage() {
                       <BookmarkIcon className="h-8 w-8 text-purple-500" />
                       <div className="ml-3">
                         <p className="text-sm font-medium text-gray-600">예상 비용</p>
-                        <p className="text-2xl font-semibold text-gray-900">${stats.estimated_cost.toFixed(3)}</p>
+                        <p className="text-2xl font-semibold text-gray-900">
+                          ${stats.estimated_cost.toFixed(3)}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -364,7 +376,9 @@ export default function FeedbackPage() {
                       <DocumentTextIcon className="h-8 w-8 text-orange-500" />
                       <div className="ml-3">
                         <p className="text-sm font-medium text-gray-600">평균 길이</p>
-                        <p className="text-2xl font-semibold text-gray-900">{stats.average_feedback_length}</p>
+                        <p className="text-2xl font-semibold text-gray-900">
+                          {stats.average_feedback_length}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -407,7 +421,7 @@ export default function FeedbackPage() {
             </div>
             <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
               {feedbackHistory.length > 0 ? (
-                feedbackHistory.map(item => (
+                feedbackHistory.map((item) => (
                   <div key={item.id} className="p-6 hover:bg-gray-50">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center space-x-3">
@@ -438,9 +452,7 @@ export default function FeedbackPage() {
                       </div>
                     </div>
                     <div className="bg-gray-50 rounded p-3 text-sm text-gray-700">
-                      <div className="line-clamp-3">
-                        {item.feedback_content}
-                      </div>
+                      <div className="line-clamp-3">{item.feedback_content}</div>
                       <button
                         onClick={() => {
                           setGeneratedFeedback(item.feedback_content)
@@ -453,7 +465,8 @@ export default function FeedbackPage() {
                     </div>
                     {item.token_usage && (
                       <div className="mt-2 text-xs text-gray-500">
-                        토큰: {item.token_usage} • 예상 비용: ${GPTService.estimateCost(item.token_usage).toFixed(4)}
+                        토큰: {item.token_usage} • 예상 비용: $
+                        {GPTService.estimateCost(item.token_usage).toFixed(4)}
                       </div>
                     )}
                   </div>
@@ -480,16 +493,14 @@ export default function FeedbackPage() {
             <div className="space-y-4">
               {/* 학생 선택 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  학생 선택
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">학생 선택</label>
                 <select
                   value={formData.student_id}
                   onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
                   className="input-field w-full"
                 >
                   <option value="">학생을 선택하세요</option>
-                  {students.map(student => (
+                  {students.map((student) => (
                     <option key={student.id} value={student.id}>
                       {student.name} - {student.student_classes?.[0]?.classes?.name}
                     </option>
@@ -518,7 +529,9 @@ export default function FeedbackPage() {
                 </label>
                 <textarea
                   value={formData.student_performance}
-                  onChange={(e) => setFormData({ ...formData, student_performance: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, student_performance: e.target.value })
+                  }
                   placeholder="학생의 학습 태도, 이해도, 참여도 등을 입력하세요..."
                   rows={3}
                   className="input-field w-full"
@@ -540,9 +553,7 @@ export default function FeedbackPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    숙제 현황
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">숙제 현황</label>
                   <input
                     type="text"
                     value={formData.homework_status}
@@ -565,7 +576,7 @@ export default function FeedbackPage() {
                     className="input-field flex-1"
                   >
                     <option value="">템플릿 선택 (선택사항)</option>
-                    {templates.map(template => (
+                    {templates.map((template) => (
                       <option key={template.id} value={template.id}>
                         {template.name}
                       </option>
@@ -580,9 +591,7 @@ export default function FeedbackPage() {
                   </button>
                 </div>
                 {selectedTemplate && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {selectedTemplate.description}
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{selectedTemplate.description}</p>
                 )}
               </div>
 
@@ -625,11 +634,14 @@ export default function FeedbackPage() {
                   <span>OpenAI API 키를 설정해주세요. (.env.local 파일 또는 API 설정)</span>
                 </div>
               )}
-              
+
               {/* 환경변수 API 키 사용 여부 표시 */}
               {import.meta.env.VITE_OPENAI_API_KEY && (
                 <div className="flex items-center space-x-2 text-green-600 text-sm bg-green-50 p-2 rounded">
-                  <span>✅ 환경변수에서 API 키 로드됨 (모델: {import.meta.env.VITE_OPENAI_MODEL || 'gpt-4o-mini'})</span>
+                  <span>
+                    ✅ 환경변수에서 API 키 로드됨 (모델:{' '}
+                    {import.meta.env.VITE_OPENAI_MODEL || 'gpt-4o-mini'})
+                  </span>
                 </div>
               )}
             </div>
@@ -668,27 +680,20 @@ export default function FeedbackPage() {
                         <ClockIcon className="h-3 w-3" />
                         <span>{apiResponse.processing_time}ms</span>
                       </div>
+                      <div>토큰: {apiResponse.token_usage.total_tokens}</div>
                       <div>
-                        토큰: {apiResponse.token_usage.total_tokens}
-                      </div>
-                      <div>
-                        예상 비용: ${GPTService.estimateCost(apiResponse.token_usage.total_tokens).toFixed(4)}
+                        예상 비용: $
+                        {GPTService.estimateCost(apiResponse.token_usage.total_tokens).toFixed(4)}
                       </div>
                     </div>
                   </div>
                 )}
 
                 <div className="flex space-x-2">
-                  <button
-                    onClick={copyToClipboard}
-                    className="btn-secondary flex-1"
-                  >
+                  <button onClick={copyToClipboard} className="btn-secondary flex-1">
                     클립보드 복사
                   </button>
-                  <button
-                    onClick={() => setGeneratedFeedback('')}
-                    className="btn-secondary"
-                  >
+                  <button onClick={() => setGeneratedFeedback('')} className="btn-secondary">
                     초기화
                   </button>
                 </div>
@@ -697,7 +702,9 @@ export default function FeedbackPage() {
               <div className="text-center py-12 text-gray-500">
                 <ChatBubbleLeftRightIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                 <p>AI가 생성한 피드백이 여기에 표시됩니다.</p>
-                <p className="text-sm mt-1">학생 정보와 수업 내용을 입력한 후 생성 버튼을 클릭하세요.</p>
+                <p className="text-sm mt-1">
+                  학생 정보와 수업 내용을 입력한 후 생성 버튼을 클릭하세요.
+                </p>
               </div>
             )}
           </div>

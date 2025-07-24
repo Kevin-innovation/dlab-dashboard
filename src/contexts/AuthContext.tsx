@@ -10,6 +10,7 @@ interface AuthContextType {
   teacher: Teacher | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string, name: string) => Promise<void>
   signOut: () => Promise<void>
   refreshTeacher: () => Promise<void>
 }
@@ -21,61 +22,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [teacher, setTeacher] = useState<Teacher | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchTeacher = async (userEmail: string) => {
+  const fetchTeacher = async (userEmail: string, userId?: string) => {
     try {
-      const mockTeacherId = '550e8400-e29b-41d4-a716-446655440000'
-      
-      // 먼저 mock teacher가 DB에 존재하는지 확인
-      const { data: existingTeacher, error: checkError } = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('id', mockTeacherId)
-        .single()
-
-      if (!checkError && existingTeacher) {
-        console.log('기존 mock teacher 사용:', existingTeacher)
-        return existingTeacher
-      }
-
-      // mock teacher가 없으면 생성
-      console.log('mock teacher 생성 중...')
-      const mockTeacher: Teacher = {
-        id: mockTeacherId,
-        email: userEmail,
-        name: '테스트 선생님',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-
-      const { data: createdTeacher, error: createError } = await supabase
-        .from('teachers')
-        .upsert([mockTeacher])
-        .select()
-        .single()
-
-      if (createError) {
-        console.error('Mock teacher 생성 오류:', createError)
-        return mockTeacher // DB 생성 실패해도 메모리상 객체 반환
-      }
-
-      console.log('Mock teacher 생성 완료:', createdTeacher)
-      return createdTeacher
-      
-      // TODO: Uncomment this when Docker/Supabase is properly set up
-      /*
+      // 실제 DB에서 teacher 정보 조회
       const { data, error } = await supabase
         .from('teachers')
         .select('*')
         .eq('email', userEmail)
         .single()
       
-      if (error && error.code !== 'PGRST116') {
+      if (error && error.code === 'PGRST116') {
+        // 데이터가 없는 경우, 기존 인증된 사용자를 위해 자동으로 teacher 레코드 생성
+        if (userId) {
+          console.log('기존 사용자를 위한 teacher 레코드 생성 중:', userEmail)
+          const { data: newTeacher, error: insertError } = await supabase
+            .from('teachers')
+            .insert([{
+              id: userId,
+              email: userEmail,
+              name: userEmail.split('@')[0], // 이메일의 @ 앞부분을 이름으로 사용
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }])
+            .select()
+            .single()
+          
+          if (insertError) {
+            console.error('기존 사용자 teacher 레코드 생성 오류:', insertError)
+            return null
+          }
+          
+          console.log('기존 사용자 teacher 레코드 생성 성공:', newTeacher)
+          return newTeacher
+        }
+        return null
+      }
+      
+      if (error) {
         console.error('Error fetching teacher:', error)
         return null
       }
       
       return data
-      */
     } catch (error) {
       console.error('Error fetching teacher:', error)
       return null
@@ -88,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    const teacherData = await fetchTeacher(user.email)
+    const teacherData = await fetchTeacher(user.email, user.id)
     setTeacher(teacherData)
   }
 
@@ -97,24 +85,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      
+
       if (currentUser?.email) {
-        const teacherData = await fetchTeacher(currentUser.email)
+        const teacherData = await fetchTeacher(currentUser.email, currentUser.id)
         setTeacher(teacherData)
       } else {
         setTeacher(null)
       }
-      
+
       setLoading(false)
     })
 
     // 인증 상태 변경 구독
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      
+
       if (currentUser?.email) {
-        const teacherData = await fetchTeacher(currentUser.email)
+        const teacherData = await fetchTeacher(currentUser.email, currentUser.id)
         setTeacher(teacherData)
       } else {
         setTeacher(null)
@@ -125,29 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    console.log('signIn called with:', email, password)
-    
-    // Temporary bypass for development - remove this when Supabase is properly configured
-    if (email.trim() === 'test@example.com' && password.trim() === 'test123') {
-      console.log('Mock login successful')
-      const mockUser = {
-        id: 'mock-user-id',
-        email: 'test@example.com',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        app_metadata: {},
-        user_metadata: {},
-        aud: 'authenticated'
-      } as User
-      
-      setUser(mockUser)
-      const teacherData = await fetchTeacher(mockUser.email!)
-      setTeacher(teacherData)
-      console.log('Mock user and teacher set:', mockUser, teacherData)
-      return
-    }
-    
-    // Real Supabase authentication
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -161,7 +128,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       console.error('Supabase auth error:', err)
-      throw new Error('로그인 중 오류가 발생했습니다. 테스트 계정 (test@example.com / test123)을 사용해보세요.')
+      throw new Error('로그인 중 오류가 발생했습니다.')
+    }
+  }
+
+  const signUp = async (email: string, password: string, name: string) => {
+    try {
+      // Supabase Auth에 사용자 등록
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+
+      if (authError) {
+        throw authError
+      }
+
+      if (!authData.user) {
+        throw new Error('사용자 생성에 실패했습니다.')
+      }
+
+      // teachers 테이블에 선생님 정보 저장
+      const { error: teacherError } = await supabase
+        .from('teachers')
+        .insert([
+          {
+            id: authData.user.id,
+            email: email,
+            name: name,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }
+        ])
+
+      if (teacherError) {
+        console.error('Teacher 생성 오류:', teacherError)
+        throw new Error('선생님 정보 저장에 실패했습니다.')
+      }
+
+      console.log('회원가입 성공:', authData.user)
+    } catch (err) {
+      console.error('Supabase signup error:', err)
+      if (err instanceof Error) {
+        throw err
+      }
+      throw new Error('회원가입 중 오류가 발생했습니다.')
     }
   }
 
@@ -175,15 +186,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     teacher,
     loading,
     signIn,
+    signUp,
     signOut,
     refreshTeacher,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>
 }
 
 export function useAuth() {
@@ -192,4 +200,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
-} 
+}

@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { StudentWithClass } from '../../types/student'
-import { TuitionCalculation, PaymentStatus, PAYMENT_STATUS_COLORS, PAYMENT_STATUS_LABELS } from '../../types/payment'
+import {
+  TuitionCalculation,
+  PaymentStatus,
+  PAYMENT_STATUS_COLORS,
+  PAYMENT_STATUS_LABELS,
+} from '../../types/payment'
 import { TuitionCalculator } from '../../utils/tuitionCalculator'
-import { 
-  CurrencyDollarIcon, 
-  CalendarIcon, 
+import { StudentService } from '../../services/studentService'
+import {
+  CurrencyDollarIcon,
+  CalendarIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  ClockIcon
+  ClockIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline'
 
 interface PaymentSummaryCardProps {
@@ -19,7 +26,13 @@ interface PaymentSummaryCardProps {
   color: 'blue' | 'green' | 'yellow' | 'red'
 }
 
-function PaymentSummaryCard({ title, value, subtitle, icon: Icon, color }: PaymentSummaryCardProps) {
+function PaymentSummaryCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color,
+}: PaymentSummaryCardProps) {
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600 border-blue-200',
     green: 'bg-green-50 text-green-600 border-green-200',
@@ -33,9 +46,7 @@ function PaymentSummaryCard({ title, value, subtitle, icon: Icon, color }: Payme
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {subtitle && (
-            <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
         </div>
         <Icon className="h-8 w-8" />
       </div>
@@ -47,13 +58,17 @@ interface PaymentRowProps {
   student: StudentWithClass
   calculation: TuitionCalculation
   nextPaymentDate: string
-  paymentStatus: { status: 'upcoming' | 'due' | 'overdue', daysUntilDue: number }
+  paymentStatus: { status: 'upcoming' | 'due' | 'overdue'; daysUntilDue: number }
+  onDelete: (studentId: string) => void
 }
 
-function PaymentRow({ student, calculation, nextPaymentDate, paymentStatus }: PaymentRowProps) {
-  const statusColorClass = paymentStatus.status === 'overdue' ? 'text-red-600' :
-                          paymentStatus.status === 'due' ? 'text-yellow-600' :
-                          'text-green-600'
+function PaymentRow({ student, calculation, nextPaymentDate, paymentStatus, onDelete }: PaymentRowProps) {
+  const statusColorClass =
+    paymentStatus.status === 'overdue'
+      ? 'text-red-600'
+      : paymentStatus.status === 'due'
+        ? 'text-yellow-600'
+        : 'text-green-600'
 
   return (
     <tr className="hover:bg-gray-50">
@@ -87,31 +102,41 @@ function PaymentRow({ student, calculation, nextPaymentDate, paymentStatus }: Pa
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className={`text-sm font-medium ${statusColorClass}`}>
-          {nextPaymentDate}
-        </div>
+        <div className={`text-sm font-medium ${statusColorClass}`}>{nextPaymentDate}</div>
         <div className="text-xs text-gray-500">
-          {paymentStatus.status === 'overdue' ? `${Math.abs(paymentStatus.daysUntilDue)}일 연체` :
-           paymentStatus.status === 'due' ? `${paymentStatus.daysUntilDue}일 남음` :
-           `${paymentStatus.daysUntilDue}일 남음`}
+          {paymentStatus.status === 'overdue'
+            ? `${Math.abs(paymentStatus.daysUntilDue)}일 연체`
+            : paymentStatus.status === 'due'
+              ? `${paymentStatus.daysUntilDue}일 남음`
+              : `${paymentStatus.daysUntilDue}일 남음`}
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          paymentStatus.status === 'overdue' ? 'bg-red-100 text-red-800' :
-          paymentStatus.status === 'due' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-green-100 text-green-800'
-        }`}>
-          {paymentStatus.status === 'overdue' ? '연체' :
-           paymentStatus.status === 'due' ? '납부예정' : '정상'}
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            paymentStatus.status === 'overdue'
+              ? 'bg-red-100 text-red-800'
+              : paymentStatus.status === 'due'
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-green-100 text-green-800'
+          }`}
+        >
+          {paymentStatus.status === 'overdue'
+            ? '연체'
+            : paymentStatus.status === 'due'
+              ? '납부예정'
+              : '정상'}
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-        <button className="text-blue-600 hover:text-blue-900 mr-3">
-          결제 처리
-        </button>
-        <button className="text-green-600 hover:text-green-900">
-          내역 보기
+        <button className="text-blue-600 hover:text-blue-900 mr-3">결제 처리</button>
+        <button className="text-green-600 hover:text-green-900 mr-3">내역 보기</button>
+        <button 
+          className="text-red-600 hover:text-red-900 p-1"
+          onClick={() => onDelete(student.id)}
+          title="학생 삭제"
+        >
+          <TrashIcon className="h-4 w-4" />
         </button>
       </td>
     </tr>
@@ -133,10 +158,11 @@ export default function PaymentsPage() {
   async function fetchStudentsAndCalculatePayments() {
     try {
       setLoading(true)
-      
+
       const { data, error } = await supabase
         .from('students')
-        .select(`
+        .select(
+          `
           *,
           student_classes (
             *,
@@ -146,30 +172,33 @@ export default function PaymentsPage() {
               duration
             )
           )
-        `)
+        `
+        )
         .order('name')
-      
+
       if (error) throw error
-      
+
       setStudents(data || [])
 
       // 각 학생별 수강료 계산
       const calculationsMap: Record<string, TuitionCalculation> = {}
       const statusesMap: Record<string, any> = {}
 
-      data?.forEach(student => {
+      data?.forEach((student) => {
         const studentClass = student.student_classes?.[0]
         if (studentClass) {
           try {
             const calculation = TuitionCalculator.calculate(student, studentClass.payment_type)
             calculationsMap[student.id] = calculation
 
-            const nextPaymentDate = TuitionCalculator.calculateNextPaymentDate(studentClass.payment_day)
+            const nextPaymentDate = TuitionCalculator.calculateNextPaymentDate(
+              studentClass.payment_day
+            )
             const paymentStatus = TuitionCalculator.getPaymentStatus(nextPaymentDate)
-            
+
             statusesMap[student.id] = {
               nextPaymentDate,
-              paymentStatus
+              paymentStatus,
             }
           } catch (err) {
             console.error(`Error calculating payment for student ${student.id}:`, err)
@@ -179,7 +208,6 @@ export default function PaymentsPage() {
 
       setCalculations(calculationsMap)
       setPaymentStatuses(statusesMap)
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.')
     } finally {
@@ -187,21 +215,48 @@ export default function PaymentsPage() {
     }
   }
 
+  const handleDeleteStudent = async (studentId: string) => {
+    if (!window.confirm('정말 이 학생을 삭제하시겠습니까? 모든 관련 데이터가 삭제됩니다.')) {
+      return
+    }
+
+    try {
+      await StudentService.deleteStudent(studentId)
+      // 목록에서 제거
+      setStudents(prev => prev.filter(s => s.id !== studentId))
+      // 계산 데이터에서 제거
+      setCalculations(prev => {
+        const newCalc = { ...prev }
+        delete newCalc[studentId]
+        return newCalc
+      })
+      setPaymentStatuses(prev => {
+        const newStatus = { ...prev }
+        delete newStatus[studentId]
+        return newStatus
+      })
+    } catch (error) {
+      console.error('학생 삭제 오류:', error)
+      alert('학생 삭제에 실패했습니다.')
+    }
+  }
+
   const summary = students.length > 0 ? TuitionCalculator.generatePaymentSummary(students) : null
 
-  const filteredStudents = students.filter(student => {
+  const filteredStudents = students.filter((student) => {
     if (filterStatus === 'all') return true
     const status = paymentStatuses[student.id]?.paymentStatus?.status
     return status === filterStatus
   })
 
   if (loading) return <div className="text-center py-8">로딩 중...</div>
-  if (error) return (
-    <div className="text-red-500 p-4 rounded-md bg-red-50 mb-4">
-      <p className="font-bold">오류 발생</p>
-      <p>{error}</p>
-    </div>
-  )
+  if (error)
+    return (
+      <div className="text-red-500 p-4 rounded-md bg-red-50 mb-4">
+        <p className="font-bold">오류 발생</p>
+        <p>{error}</p>
+      </div>
+    )
 
   return (
     <div className="p-6 space-y-6">
@@ -219,9 +274,7 @@ export default function PaymentsPage() {
             <option value="due">납부예정</option>
             <option value="overdue">연체</option>
           </select>
-          <button className="btn-primary">
-            수강료 설정
-          </button>
+          <button className="btn-primary">수강료 설정</button>
         </div>
       </div>
 
@@ -292,10 +345,10 @@ export default function PaymentsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredStudents.map(student => {
+              {filteredStudents.map((student) => {
                 const calculation = calculations[student.id]
                 const status = paymentStatuses[student.id]
-                
+
                 if (!calculation || !status) return null
 
                 return (
@@ -305,6 +358,7 @@ export default function PaymentsPage() {
                     calculation={calculation}
                     nextPaymentDate={status.nextPaymentDate}
                     paymentStatus={status.paymentStatus}
+                    onDelete={handleDeleteStudent}
                   />
                 )
               })}

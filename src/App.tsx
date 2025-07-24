@@ -16,7 +16,14 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginForm />} />
-          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="students" element={<StudentsPage />} />

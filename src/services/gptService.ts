@@ -1,4 +1,9 @@
-import { GPTFeedbackRequest, GPTFeedbackResponse, GPT_API_CONFIG, FeedbackError } from '../types/feedback'
+import {
+  GPTFeedbackRequest,
+  GPTFeedbackResponse,
+  GPT_API_CONFIG,
+  FeedbackError,
+} from '../types/feedback'
 
 export class GPTService {
   private static apiKey: string | null = null
@@ -41,42 +46,47 @@ export class GPTService {
   static async generateFeedback(request: GPTFeedbackRequest): Promise<GPTFeedbackResponse> {
     const apiKey = this.getApiKey()
     if (!apiKey) {
-      throw new Error('OpenAI API 키가 설정되지 않았습니다. .env.local 파일에 VITE_OPENAI_API_KEY를 설정하거나 설정에서 API 키를 입력해주세요.')
+      throw new Error(
+        'OpenAI API 키가 설정되지 않았습니다. .env.local 파일에 VITE_OPENAI_API_KEY를 설정하거나 설정에서 API 키를 입력해주세요.'
+      )
     }
 
     const startTime = Date.now()
 
     try {
       const prompt = this.buildPrompt(request)
-      
+
       const response = await fetch(this.baseURL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: this.getModel(),
           messages: [
             {
               role: 'system',
-              content: '당신은 코딩학원의 전문 강사입니다. 학생들의 학습 상황을 바탕으로 학부모에게 전달할 정중하고 건설적인 피드백을 작성해주세요. 한국어로 답변하며, 구체적이고 실용적인 조언을 포함해주세요.'
+              content:
+                '당신은 코딩학원의 전문 강사입니다. 학생들의 학습 상황을 바탕으로 학부모에게 전달할 정중하고 건설적인 피드백을 작성해주세요. 한국어로 답변하며, 구체적이고 실용적인 조언을 포함해주세요.',
             },
             {
               role: 'user',
-              content: prompt
-            }
+              content: prompt,
+            },
           ],
           max_tokens: GPT_API_CONFIG.max_tokens,
           temperature: GPT_API_CONFIG.temperature,
           presence_penalty: GPT_API_CONFIG.presence_penalty,
-          frequency_penalty: GPT_API_CONFIG.frequency_penalty
-        })
+          frequency_penalty: GPT_API_CONFIG.frequency_penalty,
+        }),
       })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(`OpenAI API 오류: ${response.status} - ${errorData.error?.message || response.statusText}`)
+        throw new Error(
+          `OpenAI API 오류: ${response.status} - ${errorData.error?.message || response.statusText}`
+        )
       }
 
       const data = await response.json()
@@ -92,17 +102,16 @@ export class GPTService {
         token_usage: {
           prompt_tokens: data.usage?.prompt_tokens || 0,
           completion_tokens: data.usage?.completion_tokens || 0,
-          total_tokens: data.usage?.total_tokens || 0
-        }
+          total_tokens: data.usage?.total_tokens || 0,
+        },
       }
-
     } catch (error) {
       console.error('GPT 피드백 생성 오류:', error)
-      
+
       if (error instanceof Error) {
         throw error
       }
-      
+
       throw new Error('피드백 생성 중 알 수 없는 오류가 발생했습니다.')
     }
   }
@@ -139,10 +148,10 @@ export class GPTService {
     try {
       const response = await fetch('https://api.openai.com/v1/models', {
         headers: {
-          'Authorization': `Bearer ${apiKey}`
-        }
+          Authorization: `Bearer ${apiKey}`,
+        },
       })
-      
+
       return response.ok
     } catch (error) {
       console.error('API 키 검증 오류:', error)
@@ -155,12 +164,12 @@ export class GPTService {
    */
   static replaceTemplateVariables(template: string, variables: Record<string, string>): string {
     let result = template
-    
+
     Object.entries(variables).forEach(([key, value]) => {
       const regex = new RegExp(`{{${key}}}`, 'g')
       result = result.replace(regex, value || '')
     })
-    
+
     return result
   }
 
@@ -177,12 +186,12 @@ export class GPTService {
    */
   static estimateCost(tokens: number): number {
     const model = this.getModel()
-    
+
     // GPT-4o mini: $0.00015 input, $0.0006 output per 1K tokens (평균 $0.0003)
     if (model === 'gpt-4o-mini') {
       return (tokens / 1000) * 0.0003
     }
-    
+
     // GPT-3.5-turbo: $0.002 per 1K tokens
     return (tokens / 1000) * 0.002
   }

@@ -61,10 +61,10 @@ export interface UpdateAttendanceInput extends Partial<CreateAttendanceInput> {
 
 // coding-rules.md 상태별 색상 시스템에 따라
 export const CLASS_STATUS_COLORS = {
-  active: 'bg-green-500 text-white',      // 진행중 - 초록색
-  planned: 'bg-blue-500 text-white',      // 예정 - 파란색  
-  completed: 'bg-gray-500 text-white',    // 완료 - 회색
-  makeup: 'bg-red-500 text-white',        // 보강 - 빨간색
+  active: 'bg-green-500 text-white', // 진행중 - 초록색
+  planned: 'bg-blue-500 text-white', // 예정 - 파란색
+  completed: 'bg-gray-500 text-white', // 완료 - 회색
+  makeup: 'bg-red-500 text-white', // 보강 - 빨간색
 } as const
 
 export const CLASS_STATUS_LABELS = {
@@ -75,10 +75,10 @@ export const CLASS_STATUS_LABELS = {
 } as const
 
 export const ATTENDANCE_STATUS_COLORS = {
-  present: 'bg-green-500 text-white',           // 출석
-  absent: 'bg-red-500 text-white',              // 결석
-  makeup_needed: 'bg-yellow-500 text-white',   // 보강 필요
-  makeup_completed: 'bg-blue-500 text-white',  // 보강 완료
+  present: 'bg-green-500 text-white', // 출석
+  absent: 'bg-red-500 text-white', // 결석
+  makeup_needed: 'bg-yellow-500 text-white', // 보강 필요
+  makeup_completed: 'bg-blue-500 text-white', // 보강 완료
 } as const
 
 export const ATTENDANCE_STATUS_LABELS = {
@@ -88,4 +88,4 @@ export const ATTENDANCE_STATUS_LABELS = {
   makeup_completed: '보강 완료',
 } as const
 
-export const DAY_OF_WEEK_LABELS = ['일', '월', '화', '수', '목', '금', '토'] as const 
+export const DAY_OF_WEEK_LABELS = ['일', '월', '화', '수', '목', '금', '토'] as const
