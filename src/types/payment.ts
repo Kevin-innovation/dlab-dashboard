@@ -1,5 +1,5 @@
-import { Tables, TablesInsert, TablesUpdate } from './supabase'
-import { Student, ClassType, PaymentType } from './student'
+// import { Tables, TablesInsert, TablesUpdate } from './supabase'
+import { ClassType, PaymentType } from './student'
 
 // Supabase 스키마 기반 타입 (추후 payments 테이블 생성시)
 export interface Payment {

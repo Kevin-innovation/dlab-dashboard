@@ -1,12 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Student,
   CreateStudentInput,
-  ClassType,
   ClassDuration,
-  PaymentType,
-  RoboticsDay,
-  Subject,
 } from '../../types/student'
 import { useAuth } from '../../contexts/AuthContext'
 import { StudentService } from '../../services/studentService'
@@ -60,7 +56,7 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
         payment_day: formData.payment_day,
         payment_type: formData.payment_type,
         robotics_option: formData.robotics_option || false,
-        robotics_day: formData.robotics_option ? formData.robotics_day : null,
+        robotics_day: formData.robotics_option ? formData.robotics_day : undefined,
       })
 
       console.log('학생 추가 성공:', newStudent)
@@ -76,7 +72,7 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    const { name, value, type } = e.target
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]:

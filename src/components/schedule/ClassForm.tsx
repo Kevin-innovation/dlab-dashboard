@@ -7,7 +7,6 @@ import {
 import { useAuth } from '../../contexts/AuthContext'
 import { ScheduleService, CreateScheduleInput } from '../../services/scheduleService'
 import { StudentService } from '../../services/studentService'
-import { StudentWithClass } from '../../types/student'
 
 interface ClassFormProps {
   scheduleData?: any
@@ -56,18 +55,22 @@ export function ClassForm({ scheduleData, onSubmit, onCancel }: ClassFormProps) 
         const studentClass = student.student_classes?.[0]
         const classInfo = studentClass?.classes
         
+        if (!classInfo || !classInfo.name) {
+          return null
+        }
+        
         return {
           id: student.id,
           name: student.name,
           grade: student.grade,
           class_id: classInfo?.id || '',
-          class_name: classInfo?.name || '미지정',
-          class_type: classInfo?.type || '1:1',
-          subject: classInfo?.subject || '미지정'
+          class_name: classInfo.name || '미지정',
+          class_type: classInfo.type || '1:1',
+          subject: classInfo.subject || '미지정'
         }
-      })
+      }).filter((student): student is StudentForSchedule => student !== null)
 
-      setStudents(studentsForSchedule.filter(s => s.class_id)) // 클래스가 있는 학생만
+      setStudents(studentsForSchedule) // 클래스 정보가 있는 학생들
       console.log('실제 DB에서 로드된 학생들:', studentsForSchedule)
     } catch (error) {
       console.error('학생 목록 조회 오류:', error)

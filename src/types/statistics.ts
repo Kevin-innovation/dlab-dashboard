@@ -1,5 +1,5 @@
 import { Tables, TablesInsert, TablesUpdate } from './supabase'
-import { StudentWithClass, ClassType } from './student'
+import { ClassType } from './student'
 
 // Supabase 스키마 기반 타입
 export type Statistics = Tables<'statistics'>

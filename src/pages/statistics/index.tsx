@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
 import { StudentWithClass } from '../../types/student'
 import {
   WeeklyStatistics,
@@ -9,12 +8,10 @@ import {
 } from '../../types/statistics'
 import { StatisticsCalculator } from '../../utils/statisticsCalculator'
 import {
-  ChartBarIcon,
   UserGroupIcon,
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  CalendarIcon,
   AcademicCapIcon,
 } from '@heroicons/react/24/outline'
 
@@ -212,7 +209,7 @@ function PerformanceGauge({ title, current, target, unit = '' }: PerformanceGaug
 }
 
 export default function StatisticsPage() {
-  const [students, setStudents] = useState<StudentWithClass[]>([])
+  const [, setStudents] = useState<StudentWithClass[]>([])
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStatistics | null>(null)
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStatistics | null>(null)
   const [performance, setPerformance] = useState<StatisticsPerformance | null>(null)
@@ -302,7 +299,7 @@ export default function StatisticsPage() {
         },
       ]
 
-      setStudents(mockStudents)
+      setStudents(mockStudents as any)
 
       // TODO: Uncomment when Supabase is properly configured
       /*
@@ -327,17 +324,17 @@ export default function StatisticsPage() {
       */
 
       // 통계 계산
-      const weeklyStatistics = StatisticsCalculator.calculateWeeklyStatistics(mockStudents || [])
-      const monthlyStatistics = StatisticsCalculator.calculateMonthlyStatistics(mockStudents || [])
+      const weeklyStatistics = StatisticsCalculator.calculateWeeklyStatistics(mockStudents as any)
+      const monthlyStatistics = StatisticsCalculator.calculateMonthlyStatistics(mockStudents as any)
 
       // 성과 지표 계산 (목표값은 임시 설정)
       const performanceMetrics = StatisticsCalculator.calculatePerformanceMetrics(
-        mockStudents || [],
+        mockStudents as any,
         { students: 30, revenue: 3000000, attendance: 90 }
       )
 
       // 차트 데이터 생성
-      const charts = StatisticsCalculator.generateChartData(mockStudents || [])
+      const charts = StatisticsCalculator.generateChartData(mockStudents as any)
 
       setWeeklyStats(weeklyStatistics)
       setMonthlyStats(monthlyStatistics)

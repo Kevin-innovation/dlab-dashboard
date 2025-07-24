@@ -131,7 +131,7 @@ export class StudentService {
         throw new Error('학생 목록을 불러올 수 없습니다.')
       }
 
-      return data || []
+      return (data as any) || []
     } catch (error) {
       console.error('StudentService.getStudentsByTeacher 오류:', error)
       throw new Error('학생 목록 조회 중 오류가 발생했습니다.')
@@ -166,7 +166,7 @@ export class StudentService {
         throw new Error('학생 정보를 불러올 수 없습니다.')
       }
 
-      return data || null
+      return (data as any) || null
     } catch (error) {
       console.error('StudentService.getStudentById 오류:', error)
       return null
@@ -178,7 +178,7 @@ export class StudentService {
    */
   static async updateStudent(studentId: string, updates: Partial<CreateStudentInput>): Promise<StudentWithClass> {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('students')
         .update({
           name: updates.name,

@@ -5,7 +5,6 @@ import {
   StatisticsSummary,
   StatisticsPerformance,
   ChartDataPoint,
-  PERFORMANCE_THRESHOLDS,
 } from '../types/statistics'
 import { StudentWithClass } from '../types/student'
 import { TuitionCalculator } from './tuitionCalculator'
@@ -26,10 +25,11 @@ export class StatisticsCalculator {
       const studentClass = student.student_classes?.[0]
       if (!studentClass) return
 
-      // 수업 유형별 카운팅
-      if (studentClass.class_type === '1:1') {
+      // 수업 유형별 카운팅 (classes 테이블에서 type 조회)
+      const classInfo = studentClass.classes
+      if (classInfo?.type === '1:1') {
         oneOnOneStudents++
-      } else if (studentClass.class_type === 'group') {
+      } else if (classInfo?.type === 'group') {
         groupStudents++
       }
 
@@ -116,7 +116,6 @@ export class StatisticsCalculator {
     const baseStats = this.calculateStudentCount(students)
 
     // 월간 수업 통계 (임시 계산)
-    const daysInMonth = new Date(targetYear, targetMonth, 0).getDate()
     const weekdaysInMonth = this.countWeekdays(targetYear, targetMonth - 1)
     const totalClassesScheduled = students.length * weekdaysInMonth
     const totalClassesCompleted = Math.round(totalClassesScheduled * 0.88)

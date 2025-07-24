@@ -2,7 +2,6 @@ import {
   GPTFeedbackRequest,
   GPTFeedbackResponse,
   GPT_API_CONFIG,
-  FeedbackError,
 } from '../types/feedback'
 
 export class GPTService {

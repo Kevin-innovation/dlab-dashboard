@@ -3,7 +3,6 @@ import { Student, StudentWithClass } from '../../types/student'
 import { useAuth } from '../../contexts/AuthContext'
 import { StudentService } from '../../services/studentService'
 
-const DAY_LABELS = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
 
 interface StudentListProps {
   onAdd: () => void
@@ -57,32 +56,6 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
     }
   }
 
-  // 출석 관련 기능은 추후 구현 예정
-  const handleAttendanceCheck = (studentId: string) => {
-    console.log('출석 체크:', studentId)
-    // TODO: 실제 출석 데이터 DB 연동
-  }
-
-  const handleUndoAttendance = (studentId: string) => {
-    console.log('출석 되돌리기:', studentId)
-    // TODO: 실제 출석 데이터 DB 연동
-  }
-
-  const handleResetAttendance = (studentId: string) => {
-    console.log('출석 초기화:', studentId)
-    // TODO: 실제 출석 데이터 DB 연동
-  }
-
-  // 요일별 보기는 추후 스케줄 DB 연동 시 구현 예정
-  const groupStudentsByDay = () => {
-    const grouped: { [key: number]: StudentWithClass[] } = {}
-    // 0~6까지 모든 요일 초기화
-    for (let i = 0; i < 7; i++) {
-      grouped[i] = []
-    }
-    // TODO: 실제 스케줄 DB에서 요일 정보를 가져와서 분류
-    return grouped
-  }
 
   if (loading) return <div className="text-center">로딩 중...</div>
   if (error) return <div className="text-red-500">{error}</div>

@@ -1,5 +1,5 @@
 import { TuitionCalculation, DEFAULT_TUITION_RATES, DISCOUNT_POLICIES } from '../types/payment'
-import { Student, StudentWithClass, ClassType, PaymentType, ClassDuration } from '../types/student'
+import { StudentWithClass, ClassType, PaymentType, ClassDuration } from '../types/student'
 
 export class TuitionCalculator {
   /**
@@ -264,7 +264,7 @@ export class TuitionCalculator {
       if (!studentClass) return
 
       try {
-        const calculation = this.calculate(student, studentClass.payment_type)
+        const calculation = this.calculate(student, studentClass.payment_type as PaymentType)
         const monthlyAmount =
           calculation.payment_type === 'quarterly'
             ? calculation.net_amount / 3

@@ -3,9 +3,6 @@ import { supabase } from '../../lib/supabase'
 import { StudentWithClass } from '../../types/student'
 import {
   TuitionCalculation,
-  PaymentStatus,
-  PAYMENT_STATUS_COLORS,
-  PAYMENT_STATUS_LABELS,
 } from '../../types/payment'
 import { TuitionCalculator } from '../../utils/tuitionCalculator'
 import { StudentService } from '../../services/studentService'
@@ -13,7 +10,6 @@ import {
   CurrencyDollarIcon,
   CalendarIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
   ClockIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline'
@@ -178,7 +174,7 @@ export default function PaymentsPage() {
 
       if (error) throw error
 
-      setStudents(data || [])
+      setStudents((data as any) || [])
 
       // 각 학생별 수강료 계산
       const calculationsMap: Record<string, TuitionCalculation> = {}
@@ -188,7 +184,7 @@ export default function PaymentsPage() {
         const studentClass = student.student_classes?.[0]
         if (studentClass) {
           try {
-            const calculation = TuitionCalculator.calculate(student, studentClass.payment_type)
+            const calculation = TuitionCalculator.calculate(student as any, studentClass.payment_type as any)
             calculationsMap[student.id] = calculation
 
             const nextPaymentDate = TuitionCalculator.calculateNextPaymentDate(

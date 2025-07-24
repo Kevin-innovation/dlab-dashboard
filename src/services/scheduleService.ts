@@ -110,7 +110,7 @@ export class ScheduleService {
                 grade
               )
             `)
-            .eq('class_id', schedule.class_id)
+            .eq('class_id', schedule.class_id!)
 
           if (studentError) {
             console.error('학생 정보 조회 오류:', studentError)
@@ -123,7 +123,7 @@ export class ScheduleService {
         })
       )
 
-      return schedulesWithStudents
+      return schedulesWithStudents as any
     } catch (error) {
       console.error('ScheduleService.getSchedulesByTeacher 오류:', error)
       throw new Error('스케줄 목록 조회 중 오류가 발생했습니다.')
@@ -167,7 +167,7 @@ export class ScheduleService {
             grade
           )
         `)
-        .eq('class_id', data.class_id)
+        .eq('class_id', data.class_id!)
 
       if (studentError) {
         console.error('학생 정보 조회 오류:', studentError)
@@ -176,7 +176,7 @@ export class ScheduleService {
       return {
         ...data,
         students: studentData?.map(sc => sc.students).filter(Boolean) || []
-      }
+      } as any
     } catch (error) {
       console.error('ScheduleService.getScheduleById 오류:', error)
       return null
@@ -197,7 +197,7 @@ export class ScheduleService {
       
       updateData.updated_at = new Date().toISOString()
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('schedules')
         .update(updateData)
         .eq('id', scheduleId)

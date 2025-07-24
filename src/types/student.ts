@@ -46,5 +46,13 @@ export interface UpdateStudentInput extends Partial<CreateStudentInput> {
 
 // 조인된 학생 정보 (표시용)
 export interface StudentWithClass extends Student {
-  student_classes?: StudentClass[]
+  student_classes?: (StudentClass & {
+    classes?: {
+      id?: string
+      name: string
+      type: string
+      duration: string
+      subject?: string
+    }
+  })[]
 }

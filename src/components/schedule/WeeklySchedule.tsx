@@ -1,9 +1,9 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import {
-  ScheduleWithDetails,
   DAY_OF_WEEK_LABELS,
   CLASS_STATUS_COLORS,
   CLASS_STATUS_LABELS,
+  ClassStatus,
 } from '../../types/class'
 import { useAuth } from '../../contexts/AuthContext'
 import { ScheduleService, ScheduleWithClass } from '../../services/scheduleService'
@@ -96,7 +96,7 @@ export const WeeklySchedule = forwardRef<{ fetchSchedules: () => void }, WeeklyS
                     {daySchedules.map((scheduleData) => (
                       <div
                         key={scheduleData.id}
-                        className={`mb-1 p-2 rounded cursor-pointer transition-colors hover:opacity-80 ${CLASS_STATUS_COLORS[scheduleData.status]}`}
+                        className={`mb-1 p-2 rounded cursor-pointer transition-colors hover:opacity-80 ${CLASS_STATUS_COLORS[scheduleData.status as ClassStatus]}`}
                         onClick={() => onScheduleClick(scheduleData)}
                       >
                         <div className="font-bold text-sm">
@@ -106,7 +106,7 @@ export const WeeklySchedule = forwardRef<{ fetchSchedules: () => void }, WeeklyS
                           {scheduleData.classes?.type} | {scheduleData.classes?.duration}
                         </div>
                         <div className="text-xs opacity-75">
-                          {CLASS_STATUS_LABELS[scheduleData.status]}
+                          {CLASS_STATUS_LABELS[scheduleData.status as ClassStatus]}
                         </div>
                         {scheduleData.students && scheduleData.students.length > 0 && (
                           <div className="text-xs mt-1 opacity-75">
