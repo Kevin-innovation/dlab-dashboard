@@ -116,16 +116,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('로그인 시도:', { email, passwordLength: password.length })
+      console.log('Supabase client configured:', !!supabase)
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
+      
+      console.log('로그인 응답:', { data, error })
+      
       if (error) {
+        console.error('Supabase 로그인 오류:', error)
         if (error.message === 'Invalid login credentials') {
           throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.')
         }
         throw error
       }
+      
+      console.log('로그인 성공:', data)
     } catch (err) {
       console.error('Supabase auth error:', err)
       throw new Error('로그인 중 오류가 발생했습니다.')
