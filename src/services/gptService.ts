@@ -43,14 +43,18 @@ export class GPTService {
    * 피드백 생성
    */
   static async generateFeedback(request: GPTFeedbackRequest): Promise<GPTFeedbackResponse> {
-    const apiKey = this.getApiKey()
-    console.log('API Key check:', { hasApiKey: !!apiKey, apiKeyLength: apiKey?.length })
+    const rawApiKey = this.getApiKey()
+    console.log('API Key check:', { hasApiKey: !!rawApiKey, apiKeyLength: rawApiKey?.length })
     
-    if (!apiKey) {
+    if (!rawApiKey) {
       throw new Error(
         'OpenAI API 키가 설정되지 않았습니다. .env.local 파일에 VITE_OPENAI_API_KEY를 설정하거나 설정에서 API 키를 입력해주세요.'
       )
     }
+
+    // API 키에서 줄바꿈과 공백 제거
+    const apiKey = rawApiKey.replace(/\s/g, '').trim()
+    console.log('정리된 API Key:', { originalLength: rawApiKey.length, cleanedLength: apiKey.length })
 
     const startTime = Date.now()
 
