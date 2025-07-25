@@ -10,7 +10,6 @@ import {
   UserGroupIcon,
   CurrencyDollarIcon,
   AcademicCapIcon,
-  ClockIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 
@@ -140,6 +139,13 @@ export default function Dashboard() {
   const todayOneOnOne = todaySchedules.filter(s => s.classes?.type === '1:1').length
   const todayGroup = todaySchedules.filter(s => s.classes?.type === 'group').length
 
+  // 이번 주 수업 인원 계산 (출석 + 보강 예정)
+  const weeklyAttendance = schedules.reduce((total, schedule) => {
+    // 각 스케줄에 등록된 학생 수를 합산
+    const studentsInClass = schedule.students?.length || 0
+    return total + studentsInClass
+  }, 0)
+
   // 주간 일정 계산
   const weekDays = [
     { day: '월', dayNumber: 1 },
@@ -174,7 +180,7 @@ export default function Dashboard() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="오늘 수업"
           value={loading ? "로딩..." : todaySchedules.length}
@@ -190,17 +196,10 @@ export default function Dashboard() {
           color="green"
         />
         <StatCard
-          title="이번 달 수업료"
-          value={loading ? "로딩..." : "0원"}
-          subtitle={loading ? "" : "실제 계산 기능 준비 중"}
-          icon={CurrencyDollarIcon}
-          color="yellow"
-        />
-        <StatCard
-          title="이번 주 수업 시간"
-          value={loading ? "로딩..." : `${schedules.length * 1}시간`}
-          subtitle={loading ? "" : schedules.length > 0 ? "예정된 수업 기준" : "예정된 수업이 없습니다"}
-          icon={ClockIcon}
+          title="이번 주 수업 인원"
+          value={loading ? "로딩..." : `${weeklyAttendance}명`}
+          subtitle={loading ? "" : weeklyAttendance > 0 ? "출석 + 보강 예정 인원" : "예정된 수업이 없습니다"}
+          icon={AcademicCapIcon}
           color="purple"
         />
       </div>
