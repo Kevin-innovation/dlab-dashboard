@@ -145,6 +145,8 @@ export default function FeedbackPage() {
   const [feedbackHistory, setFeedbackHistory] = useState<FeedbackHistory[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [savedCustomFormats, setSavedCustomFormats] = useState<string[]>([])
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [templateName, setTemplateName] = useState('')
   const [currentDate] = useState(new Date().toLocaleDateString('ko-KR', { 
     year: 'numeric', 
     month: 'long', 
@@ -221,18 +223,45 @@ export default function FeedbackPage() {
       alert('저장할 커스텀 형식을 입력해주세요.')
       return
     }
+    setShowSaveDialog(true)
+  }
 
-    const currentFormats = [...savedCustomFormats]
-    if (!currentFormats.includes(customFormat.trim())) {
-      currentFormats.unshift(customFormat.trim()) // 최신 것을 맨 앞에
-      if (currentFormats.length > 10) currentFormats.pop() // 최대 10개까지만 저장
-      
-      setSavedCustomFormats(currentFormats)
-      localStorage.setItem('custom_formats', JSON.stringify(currentFormats))
-      alert('커스텀 형식이 저장되었습니다.')
-    } else {
-      alert('이미 저장된 형식입니다.')
+  const handleSaveTemplate = () => {
+    if (!templateName.trim()) {
+      alert('템플릿 이름을 입력해주세요.')
+      return
     }
+
+    const customFormat = formData.custom_format || ''
+    const newTemplate = {
+      id: Date.now().toString(),
+      name: templateName.trim(),
+      content: customFormat.trim(),
+      created_at: new Date().toISOString()
+    }
+
+    // 로컬스토리지에서 기존 템플릿들 가져오기
+    const savedTemplates = JSON.parse(localStorage.getItem('custom_templates') || '[]')
+    
+    // 이름 중복 확인
+    if (savedTemplates.find((t: any) => t.name === templateName.trim())) {
+      alert('이미 존재하는 템플릿 이름입니다.')
+      return
+    }
+
+    // 새 템플릿 추가
+    savedTemplates.unshift(newTemplate)
+    if (savedTemplates.length > 20) savedTemplates.pop() // 최대 20개
+
+    localStorage.setItem('custom_templates', JSON.stringify(savedTemplates))
+    
+    // 간단한 형식 목록도 업데이트 (하위 호환성)
+    const simpleFormats = savedTemplates.map((t: any) => t.content)
+    setSavedCustomFormats(simpleFormats)
+    
+    setShowSaveDialog(false)
+    setTemplateName('')
+    alert('커스텀 템플릿이 저장되었습니다.')
   }
 
   const loadCustomFormat = (format: string) => {
@@ -804,6 +833,42 @@ export default function FeedbackPage() {
         onSave={handleApiKeySave}
         currentApiKey={apiKey}
       />
+
+      {/* 템플릿 저장 다이얼로그 */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">커스텀 템플릿 저장</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">템플릿 이름</label>
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="예: 주간 피드백 템플릿"
+                  className="input-field w-full"
+                  maxLength={50}
+                />
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button 
+                  onClick={() => {
+                    setShowSaveDialog(false)
+                    setTemplateName('')
+                  }} 
+                  className="btn-secondary flex-1"
+                >
+                  취소
+                </button>
+                <button onClick={handleSaveTemplate} className="btn-primary flex-1">
+                  저장
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

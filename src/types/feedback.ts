@@ -15,14 +15,12 @@ export interface FeedbackTemplate {
   updated_at: string
 }
 
-// 커스텀 템플릿 타입 (DB 기반)
+// 커스텀 템플릿 타입 (로컬스토리지 기반)
 export interface CustomTemplate {
   id: string
-  teacher_id: string
   name: string
   content: string
   created_at: string
-  updated_at: string
 }
 
 // GPT API 요청/응답 타입
