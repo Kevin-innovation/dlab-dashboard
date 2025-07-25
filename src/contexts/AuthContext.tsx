@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('fetchTeacher 에러:', error)
       
       // AbortError (타임아웃)인 경우
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         console.error('fetchTeacher 타임아웃 - 5초 초과')
       }
       
