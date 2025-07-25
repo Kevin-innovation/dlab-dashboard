@@ -27,7 +27,13 @@ export class StudentService {
 
       if (studentError) {
         console.error('학생 생성 오류:', studentError)
-        throw new Error('학생 정보 저장에 실패했습니다.')
+        console.error('학생 생성 오류 상세:', {
+          message: studentError.message,
+          code: studentError.code,
+          details: studentError.details,
+          hint: studentError.hint
+        })
+        throw new Error(`학생 정보 저장에 실패했습니다: ${studentError.message}`)
       }
 
       // 2. 클래스 정보 조회 또는 생성
@@ -125,7 +131,13 @@ export class StudentService {
 
       if (error) {
         console.error('학생 목록 조회 오류:', error)
-        throw new Error('학생 목록을 불러올 수 없습니다.')
+        console.error('학생 목록 조회 오류 상세:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        })
+        throw new Error(`학생 목록을 불러올 수 없습니다: ${error.message}`)
       }
 
       return (data as any) || []

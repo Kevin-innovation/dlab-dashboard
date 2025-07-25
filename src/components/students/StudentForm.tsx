@@ -43,6 +43,33 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
       return
     }
 
+    // 필수 필드 검증
+    if (!formData.name.trim()) {
+      setError('학생 이름을 입력해주세요.')
+      setLoading(false)
+      return
+    }
+
+    if (!formData.parent_name.trim()) {
+      setError('학부모 이름을 입력해주세요.')
+      setLoading(false)
+      return
+    }
+
+    if (!formData.parent_phone.trim()) {
+      setError('학부모 연락처를 입력해주세요.')
+      setLoading(false)
+      return
+    }
+
+    if (!formData.grade.trim()) {
+      setError('학년을 입력해주세요.')
+      setLoading(false)
+      return
+    }
+
+    console.log('폼 데이터 검증 완료:', formData)
+
     try {
       const newStudent = await StudentService.createStudent(teacher.id, {
         name: formData.name,
