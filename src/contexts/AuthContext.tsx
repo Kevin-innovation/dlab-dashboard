@@ -24,12 +24,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchTeacher = async (userEmail: string, userId?: string) => {
     try {
-      // 실제 DB에서 teacher 정보 조회
+      console.log('fetchTeacher 시작:', { userEmail, userId })
+      
+      // 실제 DB에서 teacher 정보 조회 (5초 타임아웃)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      
       const { data, error } = await supabase
         .from('teachers')
         .select('*')
         .eq('email', userEmail)
         .single()
+      
+      clearTimeout(timeoutId)
+      console.log('fetchTeacher DB 응답:', { data, error })
       
       if (error && error.code === 'PGRST116') {
         // 데이터가 없는 경우, 기존 인증된 사용자를 위해 자동으로 teacher 레코드 생성
@@ -65,7 +73,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return data
     } catch (error) {
-      console.error('Error fetching teacher:', error)
+      console.error('fetchTeacher 에러:', error)
+      
+      // AbortError (타임아웃)인 경우
+      if (error.name === 'AbortError') {
+        console.error('fetchTeacher 타임아웃 - 5초 초과')
+      }
+      
       return null
     }
   }
@@ -100,22 +114,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('AuthContext: 인증 상태 변경됨', { event, session })
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
+      try {
+        console.log('AuthContext: 인증 상태 변경됨', { event, session })
+        const currentUser = session?.user ?? null
+        setUser(currentUser)
 
-      if (currentUser?.email) {
-        console.log('AuthContext: Teacher 정보 가져오는 중...', currentUser.email)
-        const teacherData = await fetchTeacher(currentUser.email, currentUser.id)
-        console.log('AuthContext: Teacher 정보 설정됨', teacherData)
-        setTeacher(teacherData)
-      } else {
+        if (currentUser?.email) {
+          console.log('AuthContext: Teacher 정보 가져오는 중...', currentUser.email)
+          const teacherData = await fetchTeacher(currentUser.email, currentUser.id)
+          console.log('AuthContext: Teacher 정보 설정됨', teacherData)
+          setTeacher(teacherData)
+        } else {
+          setTeacher(null)
+        }
+      } catch (error) {
+        console.error('onAuthStateChange 에러:', error)
         setTeacher(null)
+      } finally {
+        // 중요: 에러가 발생해도 반드시 로딩 완료
+        console.log('AuthContext: onAuthStateChange 로딩 완료')
+        setLoading(false)
       }
-      
-      // 중요: 인증 상태 변경 후 로딩 완료
-      console.log('AuthContext: onAuthStateChange 로딩 완료')
-      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
