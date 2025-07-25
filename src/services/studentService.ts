@@ -41,18 +41,39 @@ export class StudentService {
       let classId: string
       
       // 기존 클래스 검색
-      const { data: existingClass } = await supabase
+      console.log('클래스 검색 시도:', {
+        teacher_id: teacherId,
+        name: studentData.subject,
+        type: studentData.class_type
+      })
+      
+      const { data: existingClass, error: classSearchError } = await supabase
         .from('classes')
         .select('id')
         .eq('teacher_id', teacherId)
         .eq('name', studentData.subject)
         .eq('type', studentData.class_type)
-        .single()
+        .maybeSingle()
+      
+      if (classSearchError && classSearchError.code !== 'PGRST116') {
+        console.error('클래스 검색 오류:', classSearchError)
+        // 클래스 검색 실패시에도 계속 진행 (새로 생성하도록)
+      }
+      
+      console.log('클래스 검색 결과:', existingClass)
 
       if (existingClass) {
         classId = existingClass.id
       } else {
         // 새 클래스 생성
+        console.log('새 클래스 생성 시도:', {
+          teacher_id: teacherId,
+          name: studentData.subject,
+          type: studentData.class_type,
+          subject: studentData.subject,
+          duration: `${studentData.class_duration}시간`
+        })
+        
         const { data: newClass, error: classError } = await supabase
           .from('classes')
           .insert({
@@ -65,9 +86,17 @@ export class StudentService {
           .select()
           .single()
 
+        console.log('클래스 생성 결과:', { newClass, classError })
+
         if (classError || !newClass) {
           console.error('클래스 생성 오류:', classError)
-          throw new Error('클래스 정보 저장에 실패했습니다.')
+          console.error('클래스 생성 오류 상세:', {
+            message: classError?.message,
+            code: classError?.code,
+            details: classError?.details,
+            hint: classError?.hint
+          })
+          throw new Error(`클래스 정보 저장에 실패했습니다: ${classError?.message}`)
         }
 
         classId = newClass.id
