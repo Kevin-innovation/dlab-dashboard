@@ -133,10 +133,6 @@ export function ClassForm({ scheduleData, onSubmit, onCancel }: ClassFormProps) 
     }))
   }
 
-  const timeOptions = Array.from({ length: 14 }, (_, i) => {
-    const hour = i + 9
-    return `${hour.toString().padStart(2, '0')}:00`
-  })
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -189,20 +185,21 @@ export function ClassForm({ scheduleData, onSubmit, onCancel }: ClassFormProps) 
           <label htmlFor="start_time" className="block text-sm font-medium text-gray-700">
             시작 시간
           </label>
-          <select
+          <input
+            type="time"
             id="start_time"
             name="start_time"
             value={formData.start_time}
             onChange={handleChange}
             required
+            min="09:00"
+            max="22:00"
+            step="900"
             className="input-field mt-1"
-          >
-            {timeOptions.map((time) => (
-              <option key={time} value={time}>
-                {time}
-              </option>
-            ))}
-          </select>
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            09:00 ~ 22:00 사이의 시간을 15분 단위로 선택할 수 있습니다
+          </p>
         </div>
 
         {scheduleData && (
