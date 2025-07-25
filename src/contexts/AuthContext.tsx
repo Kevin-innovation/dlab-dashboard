@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [teacher, setTeacher] = useState<Teacher | null>(null)
-  const [loading, setLoading] = useState(false) // 즉시 로그인 창 표시를 위해 false로 시작
+  const [loading, setLoading] = useState(true) // 초기 세션 확인이 완료될 때까지 로딩
 
   const fetchTeacher = async (userEmail: string, userId?: string) => {
     try {
@@ -85,26 +85,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // 현재 세션 확인 (백그라운드에서 실행, UI 블록하지 않음)
+    // 현재 세션 확인
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const currentUser = session?.user ?? null
       console.log('초기 세션 확인:', { currentUser: !!currentUser })
       setUser(currentUser)
 
       if (currentUser?.email) {
-        // Teacher 정보를 백그라운드에서 로드 (UI 블록하지 않음)
-        fetchTeacher(currentUser.email, currentUser.id).then(teacherData => {
-          setTeacher(teacherData || {
-            id: currentUser.id,
-            name: currentUser.email?.split('@')[0] || '선생님',
-            email: currentUser.email || '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+        // Teacher 정보 로드
+        const teacherData = await fetchTeacher(currentUser.email, currentUser.id)
+        setTeacher(teacherData || {
+          id: currentUser.id,
+          name: currentUser.email?.split('@')[0] || '선생님',
+          email: currentUser.email || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
       } else {
         setTeacher(null)
       }
+      
+      // 초기 로딩 완료
+      setLoading(false)
     })
 
     // 인증 상태 변경 구독

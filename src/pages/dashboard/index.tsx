@@ -133,14 +133,17 @@ export default function Dashboard() {
   const oneOnOneCount = students.filter(s => s.student_classes?.[0]?.classes?.type === '1:1').length
   const groupCount = students.filter(s => s.student_classes?.[0]?.classes?.type === 'group').length
 
+  // 학생이 있는 스케줄만 필터링
+  const activeSchedules = schedules.filter(s => s.students && s.students.length > 0)
+
   // 오늘의 수업 계산
   const today = new Date().getDay()
-  const todaySchedules = schedules.filter(s => s.day_of_week === today)
+  const todaySchedules = activeSchedules.filter(s => s.day_of_week === today)
   const todayOneOnOne = todaySchedules.filter(s => s.classes?.type === '1:1').length
   const todayGroup = todaySchedules.filter(s => s.classes?.type === 'group').length
 
   // 이번 주 수업 인원 계산 (출석 + 보강 예정)
-  const weeklyAttendance = schedules.reduce((total, schedule) => {
+  const weeklyAttendance = activeSchedules.reduce((total, schedule) => {
     // 각 스케줄에 등록된 학생 수를 합산
     const studentsInClass = schedule.students?.length || 0
     return total + studentsInClass
@@ -156,7 +159,7 @@ export default function Dashboard() {
     { day: '토', dayNumber: 6 },
     { day: '일', dayNumber: 0 },
   ].map(day => {
-    const daySchedules = schedules.filter(s => s.day_of_week === day.dayNumber)
+    const daySchedules = activeSchedules.filter(s => s.day_of_week === day.dayNumber)
     return {
       ...day,
       hasClass: daySchedules.length > 0,
