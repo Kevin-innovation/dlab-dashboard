@@ -44,6 +44,8 @@ export class GPTService {
    */
   static async generateFeedback(request: GPTFeedbackRequest): Promise<GPTFeedbackResponse> {
     const apiKey = this.getApiKey()
+    console.log('API Key check:', { hasApiKey: !!apiKey, apiKeyLength: apiKey?.length })
+    
     if (!apiKey) {
       throw new Error(
         'OpenAI API 키가 설정되지 않았습니다. .env.local 파일에 VITE_OPENAI_API_KEY를 설정하거나 설정에서 API 키를 입력해주세요.'
@@ -54,6 +56,35 @@ export class GPTService {
 
     try {
       const prompt = this.buildPrompt(request)
+      const model = this.getModel()
+      
+      console.log('GPT 요청 정보:', {
+        url: this.baseURL,
+        model,
+        prompt: prompt.substring(0, 100) + '...',
+        apiKeyPrefix: apiKey.substring(0, 7) + '...'
+      })
+
+      const requestBody = {
+        model,
+        messages: [
+          {
+            role: 'system',
+            content:
+              '당신은 코딩학원의 전문 강사입니다. 학생들의 학습 상황을 바탕으로 학부모에게 전달할 정중하고 건설적인 피드백을 작성해주세요. 한국어로 답변하며, 구체적이고 실용적인 조언을 포함해주세요.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        max_tokens: GPT_API_CONFIG.max_tokens,
+        temperature: GPT_API_CONFIG.temperature,
+        presence_penalty: GPT_API_CONFIG.presence_penalty,
+        frequency_penalty: GPT_API_CONFIG.frequency_penalty,
+      }
+
+      console.log('요청 body 검증:', JSON.stringify(requestBody).substring(0, 200) + '...')
 
       const response = await fetch(this.baseURL, {
         method: 'POST',
@@ -61,24 +92,7 @@ export class GPTService {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          model: this.getModel(),
-          messages: [
-            {
-              role: 'system',
-              content:
-                '당신은 코딩학원의 전문 강사입니다. 학생들의 학습 상황을 바탕으로 학부모에게 전달할 정중하고 건설적인 피드백을 작성해주세요. 한국어로 답변하며, 구체적이고 실용적인 조언을 포함해주세요.',
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          max_tokens: GPT_API_CONFIG.max_tokens,
-          temperature: GPT_API_CONFIG.temperature,
-          presence_penalty: GPT_API_CONFIG.presence_penalty,
-          frequency_penalty: GPT_API_CONFIG.frequency_penalty,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
@@ -106,6 +120,16 @@ export class GPTService {
       }
     } catch (error) {
       console.error('GPT 피드백 생성 오류:', error)
+      
+      // TypeError: Failed to execute 'fetch' 에러의 경우
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error('Fetch 에러 상세:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        })
+        throw new Error('네트워크 요청 중 오류가 발생했습니다. API 키나 설정을 확인해주세요.')
+      }
 
       if (error instanceof Error) {
         throw error
@@ -145,12 +169,20 @@ export class GPTService {
    */
   static async validateApiKey(apiKey: string): Promise<boolean> {
     try {
+      console.log('API 키 검증 시작:', { apiKeyLength: apiKey?.length, apiKeyPrefix: apiKey?.substring(0, 7) + '...' })
+      
+      if (!apiKey || apiKey.trim() === '') {
+        console.error('API 키가 비어있습니다')
+        return false
+      }
+
       const response = await fetch('https://api.openai.com/v1/models', {
         headers: {
           Authorization: `Bearer ${apiKey}`,
         },
       })
 
+      console.log('API 키 검증 응답:', { status: response.status, ok: response.ok })
       return response.ok
     } catch (error) {
       console.error('API 키 검증 오류:', error)
