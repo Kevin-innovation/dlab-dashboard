@@ -91,7 +91,7 @@ export class GPTService {
         messages: [
           {
             role: 'system',
-            content: '당신은 코딩학원의 전문 강사입니다. 학생들의 학습 상황을 바탕으로 학부모에게 전달할 정중하고 건설적인 피드백을 작성해주세요. 한국어로 답변하며, 구체적이고 실용적인 조언을 포함해주세요.',
+            content: '당신은 코딩학원의 전문 강사입니다. 커스텀 평식에 작성된 포맷을 정확하게 참고하여, 오늘날짜로 피드백 작성.',
           },
           {
             role: 'user',
@@ -192,7 +192,8 @@ export class GPTService {
    * 프롬프트 구성
    */
   private static buildPrompt(request: GPTFeedbackRequest): string {
-    let prompt = `학생명: ${request.student_name}
+    let prompt = `오늘 날짜: ${request.current_date || new Date().toLocaleDateString('ko-KR')}
+학생명: ${request.student_name}
 수업: ${request.class_name}
 수업 내용: ${request.lesson_content}
 학생 상황: ${request.student_performance}`
@@ -201,14 +202,20 @@ export class GPTService {
       prompt += `\n\n피드백 형식 요청:\n${request.custom_format}`
     }
 
-    prompt += `\n\n위 정보를 바탕으로 학부모에게 전달할 피드백을 작성해주세요. 다음 사항을 포함해주세요:
+    prompt += `\n\n위 정보를 바탕으로 학부모에게 전달할 오늘(${request.current_date || new Date().toLocaleDateString('ko-KR')}) 피드백을 작성해주세요.`
+
+    if (request.custom_format) {
+      prompt += ' 커스텀 형식에 명시된 포맷을 정확히 따라 작성해주세요.'
+    } else {
+      prompt += ` 다음 사항을 포함해주세요:
 1. 오늘 수업에서 다룬 내용 요약
 2. 학생의 학습 태도와 성과
 3. 잘한 점과 개선이 필요한 점
 4. 가정에서의 학습 방향 제안
-5. 격려의 메시지
+5. 격려의 메시지`
+    }
 
-피드백은 정중하고 건설적이며, 구체적인 조언을 포함해야 합니다.`
+    prompt += `\n\n피드백은 정중하고 건설적이며, 구체적인 조언을 포함해야 합니다.`
 
     return prompt
   }

@@ -23,6 +23,7 @@ export interface GPTFeedbackRequest {
   student_performance: string
   custom_format?: string
   template_id?: string
+  current_date?: string
 }
 
 export interface GPTFeedbackResponse {

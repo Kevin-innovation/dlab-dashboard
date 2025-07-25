@@ -144,6 +144,13 @@ export default function FeedbackPage() {
   const [error, setError] = useState<string | null>(null)
   const [feedbackHistory, setFeedbackHistory] = useState<FeedbackHistory[]>([])
   const [showHistory, setShowHistory] = useState(false)
+  const [savedCustomFormats, setSavedCustomFormats] = useState<string[]>([])
+  const [currentDate] = useState(new Date().toLocaleDateString('ko-KR', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    weekday: 'long'
+  }))
 
   useEffect(() => {
     // 로컬 스토리지에서 API 키 로드
@@ -151,6 +158,12 @@ export default function FeedbackPage() {
     if (savedApiKey) {
       setApiKey(savedApiKey)
       GPTService.setApiKey(savedApiKey)
+    }
+
+    // 저장된 커스텀 형식 로드
+    const savedFormats = localStorage.getItem('custom_formats')
+    if (savedFormats) {
+      setSavedCustomFormats(JSON.parse(savedFormats))
     }
 
     // 피드백 히스토리 로드
@@ -202,6 +215,35 @@ export default function FeedbackPage() {
     localStorage.setItem('openai_api_key', newApiKey)
   }
 
+  const saveCustomFormat = () => {
+    if (!formData.custom_format.trim()) {
+      alert('저장할 커스텀 형식을 입력해주세요.')
+      return
+    }
+
+    const currentFormats = [...savedCustomFormats]
+    if (!currentFormats.includes(formData.custom_format.trim())) {
+      currentFormats.unshift(formData.custom_format.trim()) // 최신 것을 맨 앞에
+      if (currentFormats.length > 10) currentFormats.pop() // 최대 10개까지만 저장
+      
+      setSavedCustomFormats(currentFormats)
+      localStorage.setItem('custom_formats', JSON.stringify(currentFormats))
+      alert('커스텀 형식이 저장되었습니다.')
+    } else {
+      alert('이미 저장된 형식입니다.')
+    }
+  }
+
+  const loadCustomFormat = (format: string) => {
+    setFormData({ ...formData, custom_format: format })
+  }
+
+  const deleteCustomFormat = (index: number) => {
+    const updatedFormats = savedCustomFormats.filter((_, i) => i !== index)
+    setSavedCustomFormats(updatedFormats)
+    localStorage.setItem('custom_formats', JSON.stringify(updatedFormats))
+  }
+
   const selectedStudent = students.find((s) => s.id === formData.student_id)
   const selectedTemplate = templates.find((t) => t.id === formData.template_id)
 
@@ -226,6 +268,7 @@ export default function FeedbackPage() {
         lesson_content: formData.lesson_content,
         student_performance: formData.student_performance,
         custom_format: formData.custom_format,
+        current_date: currentDate,
       }
 
       const response: GPTFeedbackResponse = await GPTService.generateFeedback(request)
@@ -593,18 +636,62 @@ export default function FeedbackPage() {
                 )}
               </div>
 
+              {/* 오늘 날짜 표시 */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center space-x-2 text-blue-700">
+                  <ClockIcon className="h-4 w-4" />
+                  <span className="text-sm font-medium">오늘 날짜: {currentDate}</span>
+                </div>
+                <p className="text-xs text-blue-600 mt-1">피드백 생성시 오늘 날짜가 자동으로 반영됩니다.</p>
+              </div>
+
               {/* 커스텀 형식 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  커스텀 형식 (선택사항)
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    커스텀 형식 (선택사항)
+                  </label>
+                  <button
+                    onClick={saveCustomFormat}
+                    disabled={!formData.custom_format.trim()}
+                    className="text-xs btn-secondary px-2 py-1"
+                  >
+                    저장
+                  </button>
+                </div>
                 <textarea
                   value={formData.custom_format}
                   onChange={(e) => setFormData({ ...formData, custom_format: e.target.value })}
                   placeholder="원하는 피드백 형식이나 포함할 내용을 입력하세요..."
-                  rows={2}
+                  rows={3}
                   className="input-field w-full"
                 />
+                
+                {/* 저장된 커스텀 형식 목록 */}
+                {savedCustomFormats.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-600 mb-2">저장된 형식:</p>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {savedCustomFormats.map((format, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 rounded p-2">
+                          <button
+                            onClick={() => loadCustomFormat(format)}
+                            className="text-left text-xs text-gray-700 hover:text-blue-600 flex-1 truncate"
+                            title={format}
+                          >
+                            {format.length > 50 ? format.substring(0, 50) + '...' : format}
+                          </button>
+                          <button
+                            onClick={() => deleteCustomFormat(index)}
+                            className="text-red-500 hover:text-red-700 text-xs ml-2"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 생성 버튼 */}
