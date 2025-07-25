@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { StudentList } from '../../components/students/StudentList'
 import { StudentForm } from '../../components/students/StudentForm'
+import { BulkImportForm } from '../../components/students/BulkImportForm'
 import { Student } from '../../types/student'
 
 export function StudentsPage() {
   const [showForm, setShowForm] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<Student | undefined>()
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -29,6 +31,19 @@ export function StudentsPage() {
     setSelectedStudent(undefined)
   }
 
+  const handleBulkImport = () => {
+    setShowBulkImport(true)
+  }
+
+  const handleBulkImportComplete = () => {
+    setShowBulkImport(false)
+    setRefreshKey((prev) => prev + 1) // 목록 새로고침 트리거
+  }
+
+  const handleBulkImportCancel = () => {
+    setShowBulkImport(false)
+  }
+
   return (
     <div className="p-6">
       {showForm ? (
@@ -42,8 +57,20 @@ export function StudentsPage() {
             onCancel={handleFormCancel}
           />
         </div>
+      ) : showBulkImport ? (
+        <div className="card">
+          <BulkImportForm
+            onComplete={handleBulkImportComplete}
+            onCancel={handleBulkImportCancel}
+          />
+        </div>
       ) : (
-        <StudentList key={refreshKey} onAdd={handleAdd} onEdit={handleEdit} />
+        <StudentList 
+          key={refreshKey} 
+          onAdd={handleAdd} 
+          onEdit={handleEdit}
+          onBulkImport={handleBulkImport}
+        />
       )}
     </div>
   )

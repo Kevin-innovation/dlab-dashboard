@@ -11,9 +11,10 @@ import { AttendanceProgress, CourseType } from '../../types/attendance'
 interface StudentListProps {
   onAdd: () => void
   onEdit: (student: Student) => void
+  onBulkImport?: () => void
 }
 
-export function StudentList({ onAdd, onEdit }: StudentListProps) {
+export function StudentList({ onAdd, onEdit, onBulkImport }: StudentListProps) {
   const { teacher } = useAuth()
   const [students, setStudents] = useState<StudentWithClass[]>([])
   const [schedules, setSchedules] = useState<ScheduleWithClass[]>([])
@@ -160,6 +161,11 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
           <button className="btn-primary" onClick={onAdd}>
             새 학생 추가
           </button>
+          {onBulkImport && (
+            <button className="btn-secondary" onClick={onBulkImport}>
+              일괄 입력
+            </button>
+          )}
         </div>
       </div>
 
