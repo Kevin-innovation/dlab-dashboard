@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { Student, StudentWithClass } from '../../types/student'
 import { useAuth } from '../../contexts/AuthContext'
 import { StudentService } from '../../services/studentService'
+import { AttendanceProgressService } from '../../services/attendanceProgressService'
+import { AttendanceGauge } from '../attendance/AttendanceGauge'
+import { AttendanceProgress, CourseType } from '../../types/attendance'
 
 
 interface StudentListProps {
@@ -12,6 +15,7 @@ interface StudentListProps {
 export function StudentList({ onAdd, onEdit }: StudentListProps) {
   const { teacher } = useAuth()
   const [students, setStudents] = useState<StudentWithClass[]>([])
+  const [attendanceProgressMap, setAttendanceProgressMap] = useState<Map<string, AttendanceProgress>>(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'all' | 'by_day'>('all')
@@ -33,15 +37,40 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
       setLoading(true)
       setError(null)
 
-      const studentsData = await StudentService.getStudentsByTeacher(teacher.id)
+      // 학생 목록과 출석 진행률을 병렬로 로드
+      const [studentsData, attendanceResponse] = await Promise.all([
+        StudentService.getStudentsByTeacher(teacher.id),
+        AttendanceProgressService.getProgressByTeacher(teacher.id)
+      ])
+
       console.log('학생 목록 로드됨:', studentsData)
+      console.log('출석 진행률 로드됨:', attendanceResponse.data)
+      
       setStudents(studentsData)
+      
+      // 출석 진행률을 Map으로 변환
+      if (attendanceResponse.success && attendanceResponse.data) {
+        const progressMap = AttendanceProgressService.progressArrayToMap(attendanceResponse.data)
+        setAttendanceProgressMap(progressMap)
+      }
     } catch (err) {
-      console.error('학생 목록 로드 오류:', err)
-      setError(err instanceof Error ? err.message : '학생 목록을 불러오는데 실패했습니다.')
+      console.error('데이터 로드 오류:', err)
+      setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.')
     } finally {
       setLoading(false)
     }
+  }
+
+  // 출석 진행률 업데이트 핸들러
+  const handleAttendanceUpdate = (studentId: string, newWeek: number) => {
+    setAttendanceProgressMap(prev => {
+      const newMap = new Map(prev)
+      const current = newMap.get(studentId)
+      if (current) {
+        newMap.set(studentId, { ...current, current_week: newWeek })
+      }
+      return newMap
+    })
   }
 
   const handleDelete = async (id: string) => {
@@ -132,7 +161,30 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
                       {student.notes && (
                         <div className="text-sm text-gray-500 mb-2">{student.notes}</div>
                       )}
-                      {/* 출석률 게이지는 추후 출석 DB 연동 시 구현 예정 */}
+                      
+                      {/* 출석 게이지 */}
+                      {(() => {
+                        const progress = attendanceProgressMap.get(student.id)
+                        if (!progress) return null
+                        
+                        // payment_type에서 course_type 결정
+                        const studentClass = student.student_classes?.[0]
+                        const courseType: CourseType = studentClass?.payment_type === 'threemonth' ? '3month' : '1month'
+                        
+                        return (
+                          <div className="mt-3">
+                            <AttendanceGauge
+                              studentId={student.id}
+                              studentName={student.name}
+                              currentWeek={progress.current_week}
+                              totalWeeks={progress.total_weeks}
+                              courseType={courseType}
+                              onUpdate={(newWeek) => handleAttendanceUpdate(student.id, newWeek)}
+                              className="w-full"
+                            />
+                          </div>
+                        )
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {student.grade}
