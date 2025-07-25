@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { ScheduleWithClass } from '../../services/scheduleService'
+import { AttendanceProgressService } from '../../services/attendanceProgressService'
 
 interface AttendanceFormProps {
   scheduleData: ScheduleWithClass
   date: string
   onSubmit: () => void
   onCancel: () => void
+  onAttendanceUpdated?: (studentId: string, newWeek: number) => void
 }
 
-export function AttendanceForm({ scheduleData, date, onSubmit, onCancel }: AttendanceFormProps) {
+export function AttendanceForm({ scheduleData, date, onSubmit, onCancel, onAttendanceUpdated }: AttendanceFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedStudents, setSelectedStudents] = useState<string[]>([])
@@ -27,16 +29,52 @@ export function AttendanceForm({ scheduleData, date, onSubmit, onCancel }: Atten
     setError(null)
 
     try {
-      // TODO: 실제 출석 데이터 저장 로직 구현
-      console.log('출석 처리:', {
+      console.log('출석 처리 시작:', {
         scheduleId: scheduleData.id,
         date,
         presentStudents: selectedStudents
       })
+
+      // 선택된 학생들의 출석 게이지 업데이트
+      const updatePromises = selectedStudents.map(async (studentId) => {
+        try {
+          const response = await AttendanceProgressService.updateProgress(studentId, 'increment')
+          if (response.success && response.data) {
+            console.log(`${studentId} 출석 진행률 업데이트 성공:`, response.data.current_week)
+            onAttendanceUpdated?.(studentId, response.data.current_week)
+            return { studentId, success: true, newWeek: response.data.current_week }
+          } else {
+            console.error(`${studentId} 출석 진행률 업데이트 실패:`, response.error)
+            return { studentId, success: false, error: response.error }
+          }
+        } catch (error) {
+          console.error(`${studentId} 출석 진행률 업데이트 오류:`, error)
+          return { studentId, success: false, error: error instanceof Error ? error.message : '알 수 없는 오류' }
+        }
+      })
+
+      const results = await Promise.allSettled(updatePromises)
+      const successCount = results.filter(result => 
+        result.status === 'fulfilled' && result.value.success
+      ).length
       
-      // 임시로 성공 처리
+      const failedResults = results.filter(result => 
+        result.status === 'rejected' || 
+        (result.status === 'fulfilled' && !result.value.success)
+      )
+
+      if (failedResults.length > 0) {
+        console.warn('일부 학생 출석 처리 실패:', failedResults)
+        setError(`${successCount}명 처리 완료, ${failedResults.length}명 실패`)
+      } else {
+        console.log(`모든 학생 출석 처리 완료: ${successCount}명`)
+      }
+
+      // TODO: 나중에 attendance 테이블에도 출석 기록 저장 구현
+      
       onSubmit()
     } catch (err) {
+      console.error('출석 처리 전체 오류:', err)
       setError(err instanceof Error ? err.message : '출석 처리에 실패했습니다.')
     } finally {
       setLoading(false)

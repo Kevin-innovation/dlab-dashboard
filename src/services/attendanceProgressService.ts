@@ -18,7 +18,7 @@ export class AttendanceProgressService {
    */
   static async getProgressByTeacher(teacherId: string): Promise<AttendanceProgressListResponse> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('student_attendance_progress')
         .select(`
           *,
@@ -51,7 +51,7 @@ export class AttendanceProgressService {
    */
   static async getProgressByStudent(studentId: string): Promise<AttendanceProgressResponse> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('student_attendance_progress')
         .select('*')
         .eq('student_id', studentId)
@@ -61,7 +61,7 @@ export class AttendanceProgressService {
 
       return {
         success: true,
-        data
+        data: data as AttendanceProgress
       }
     } catch (error) {
       console.error('Error fetching student attendance progress:', error)
@@ -113,7 +113,7 @@ export class AttendanceProgressService {
         last_attendance_date: action === 'increment' ? new Date().toISOString() : current.last_attendance_date
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('student_attendance_progress')
         .update(updateData)
         .eq('student_id', studentId)
@@ -124,7 +124,7 @@ export class AttendanceProgressService {
 
       return {
         success: true,
-        data
+        data: data as AttendanceProgress
       }
     } catch (error) {
       console.error('Error updating attendance progress:', error)
@@ -140,7 +140,7 @@ export class AttendanceProgressService {
    */
   static async createProgress(progressData: AttendanceProgressInsert): Promise<AttendanceProgressResponse> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('student_attendance_progress')
         .insert([progressData])
         .select()
@@ -150,7 +150,7 @@ export class AttendanceProgressService {
 
       return {
         success: true,
-        data
+        data: data as AttendanceProgress
       }
     } catch (error) {
       console.error('Error creating attendance progress:', error)
@@ -166,7 +166,7 @@ export class AttendanceProgressService {
    */
   static async deleteProgress(studentId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('student_attendance_progress')
         .delete()
         .eq('student_id', studentId)
@@ -201,7 +201,7 @@ export class AttendanceProgressService {
       const current = currentResponse.data
       const adjustedWeek = Math.min(current.current_week, config.totalWeeks)
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('student_attendance_progress')
         .update({
           total_weeks: config.totalWeeks,
@@ -216,7 +216,7 @@ export class AttendanceProgressService {
 
       return {
         success: true,
-        data
+        data: data as AttendanceProgress
       }
     } catch (error) {
       console.error('Error adjusting attendance progress:', error)

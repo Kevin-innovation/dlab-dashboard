@@ -52,6 +52,11 @@ export function SchedulePage() {
     setSelectedSchedule(undefined)
   }
 
+  const handleAttendanceUpdated = (studentId: string, newWeek: number) => {
+    console.log(`학생 ${studentId}의 출석 진행률이 ${newWeek}주로 업데이트됨`)
+    // 필요한 경우 추가 UI 업데이트 로직을 여기에 구현
+  }
+
   const handleBackToSchedule = () => {
     setShowClassForm(false)
     setShowAttendanceForm(false)
@@ -112,6 +117,7 @@ export function SchedulePage() {
             date={selectedDate}
             onSubmit={handleAttendanceFormSubmit}
             onCancel={handleAttendanceFormCancel}
+            onAttendanceUpdated={handleAttendanceUpdated}
           />
         </div>
       ) : (
