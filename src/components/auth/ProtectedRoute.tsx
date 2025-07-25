@@ -9,19 +9,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   console.log('ProtectedRoute 상태:', { loading, user: !!user, teacher: !!teacher })
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!user) {
+      console.log('ProtectedRoute: 로그인하지 않은 사용자 - /login으로 리다이렉트')
       navigate('/login')
     }
-  }, [user, loading, navigate])
+  }, [user, navigate])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
-
+  // 로그인하지 않은 사용자는 즉시 리다이렉트 (로딩 없음)
   if (!user) {
     return null
   }

@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [teacher, setTeacher] = useState<Teacher | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // 즉시 로그인 창 표시를 위해 false로 시작
 
   const fetchTeacher = async (userEmail: string, userId?: string) => {
     try {
@@ -95,9 +95,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // 현재 세션 확인
+    // 현재 세션 확인 (백그라운드에서 실행, UI 블록하지 않음)
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const currentUser = session?.user ?? null
+      console.log('초기 세션 확인:', { currentUser: !!currentUser })
       setUser(currentUser)
 
       if (currentUser?.email) {
@@ -106,8 +107,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setTeacher(null)
       }
-
-      setLoading(false)
     })
 
     // 인증 상태 변경 구독
@@ -233,16 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   console.log('AuthProvider 렌더링 상태:', { loading, user: !!user, teacher: !!teacher })
   
-  if (loading) {
-    console.log('AuthProvider: 로딩 중...')
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        <p className="ml-4">인증 상태 확인 중...</p>
-      </div>
-    )
-  }
-  
+  // 로딩 화면 제거 - 무조건 바로 UI 표시
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
