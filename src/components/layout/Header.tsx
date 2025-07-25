@@ -27,7 +27,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             <Bars3Icon className="h-6 w-6" />
           </button>
           <div className="flex items-center space-x-3">
-            <img src="/src/img/dlab logo.png" alt="D.LAB CODING 로고" className="h-8 w-auto" />
+            <img src="/logo.png" alt="D.LAB CODING 로고" className="h-8 w-auto" />
             <span className="text-xl font-bold text-gray-900">수성캠퍼스</span>
           </div>
           <div className="hidden sm:flex flex-col">

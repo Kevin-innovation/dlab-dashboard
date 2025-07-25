@@ -8,21 +8,22 @@ export class StudentService {
   static async createStudent(teacherId: string, studentData: CreateStudentInput): Promise<StudentWithClass> {
     try {
       // 1. 학생 정보 저장
+      console.log('학생 생성 시도:', { teacherId, studentData })
+      
       const { data: studentResult, error: studentError } = await supabase
         .from('students')
-        .insert([
-          {
-            teacher_id: teacherId,
-            name: studentData.name,
-            parent_name: studentData.parent_name,
-            parent_phone: studentData.parent_phone,
-            grade: studentData.grade,
-            payment_day: studentData.payment_day,
-            notes: studentData.notes
-          }
-        ])
+        .insert({
+          teacher_id: teacherId,
+          name: studentData.name,
+          parent_name: studentData.parent_name,
+          parent_phone: studentData.parent_phone,
+          grade: studentData.grade,
+          notes: studentData.notes || null
+        })
         .select()
         .single()
+        
+      console.log('학생 생성 결과:', { studentResult, studentError })
 
       if (studentError) {
         console.error('학생 생성 오류:', studentError)
