@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { StudentWithClass } from '../../types/student'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import {
@@ -211,7 +210,6 @@ function PerformanceGauge({ title, current, target, unit = '' }: PerformanceGaug
 }
 
 export default function StatisticsPage() {
-  const [students, setStudents] = useState<StudentWithClass[]>([])
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStatistics | null>(null)
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStatistics | null>(null)
   const [performance, setPerformance] = useState<StatisticsPerformance | null>(null)
@@ -255,7 +253,6 @@ export default function StatisticsPage() {
       if (error) throw error
       
       const studentsData = (data as any) || []
-      setStudents(studentsData)
 
       // 통계 계산
       const weeklyStatistics = StatisticsCalculator.calculateWeeklyStatistics(studentsData)

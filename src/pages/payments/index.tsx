@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { StudentWithClass } from '../../types/student'
+import { useAuth } from '../../contexts/AuthContext'
 import {
   TuitionCalculation,
 } from '../../types/payment'
@@ -140,6 +141,7 @@ function PaymentRow({ student, calculation, nextPaymentDate, paymentStatus, onDe
 }
 
 export default function PaymentsPage() {
+  const { teacher } = useAuth()
   const [students, setStudents] = useState<StudentWithClass[]>([])
   const [calculations, setCalculations] = useState<Record<string, TuitionCalculation>>({})
   const [paymentStatuses, setPaymentStatuses] = useState<Record<string, any>>({})
@@ -148,12 +150,18 @@ export default function PaymentsPage() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'due' | 'overdue'>('all')
 
   useEffect(() => {
-    fetchStudentsAndCalculatePayments()
-  }, [])
+    if (teacher) {
+      fetchStudentsAndCalculatePayments()
+    }
+  }, [teacher])
 
   async function fetchStudentsAndCalculatePayments() {
     try {
       setLoading(true)
+
+      if (!teacher) {
+        throw new Error('로그인 정보를 확인할 수 없습니다.')
+      }
 
       const { data, error } = await supabase
         .from('students')
@@ -170,7 +178,7 @@ export default function PaymentsPage() {
           )
         `
         )
-        .eq('teacher_id', teacher?.id)
+        .eq('teacher_id', teacher.id)
         .order('name')
 
       if (error) throw error
