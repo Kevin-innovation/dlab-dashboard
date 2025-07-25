@@ -9,7 +9,17 @@ export type FeedbackUpdate = TablesUpdate<'feedback'>
 export interface FeedbackTemplate {
   id: string
   name: string
-  description: string
+  description?: string
+  content: string
+  created_at: string
+  updated_at: string
+}
+
+// 커스텀 템플릿 타입 (DB 기반)
+export interface CustomTemplate {
+  id: string
+  teacher_id: string
+  name: string
   content: string
   created_at: string
   updated_at: string

@@ -216,14 +216,15 @@ export default function FeedbackPage() {
   }
 
   const saveCustomFormat = () => {
-    if (!formData.custom_format.trim()) {
+    const customFormat = formData.custom_format || ''
+    if (!customFormat.trim()) {
       alert('저장할 커스텀 형식을 입력해주세요.')
       return
     }
 
     const currentFormats = [...savedCustomFormats]
-    if (!currentFormats.includes(formData.custom_format.trim())) {
-      currentFormats.unshift(formData.custom_format.trim()) // 최신 것을 맨 앞에
+    if (!currentFormats.includes(customFormat.trim())) {
+      currentFormats.unshift(customFormat.trim()) // 최신 것을 맨 앞에
       if (currentFormats.length > 10) currentFormats.pop() // 최대 10개까지만 저장
       
       setSavedCustomFormats(currentFormats)
@@ -653,7 +654,7 @@ export default function FeedbackPage() {
                   </label>
                   <button
                     onClick={saveCustomFormat}
-                    disabled={!formData.custom_format.trim()}
+                    disabled={!(formData.custom_format || '').trim()}
                     className="text-xs btn-secondary px-2 py-1"
                   >
                     저장
