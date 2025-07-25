@@ -5,6 +5,8 @@ import { useAuth } from '../../contexts/AuthContext'
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, teacher, loading } = useAuth()
   const navigate = useNavigate()
+  
+  console.log('ProtectedRoute 상태:', { loading, user: !!user, teacher: !!teacher })
 
   useEffect(() => {
     if (!loading && !user) {

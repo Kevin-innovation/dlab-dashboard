@@ -11,6 +11,8 @@ import StatisticsPage from './pages/statistics'
 import FeedbackPage from './pages/feedback'
 
 function App() {
+  console.log('App 컴포넌트 렌더링 시작')
+  
   return (
     <Router>
       <AuthProvider>

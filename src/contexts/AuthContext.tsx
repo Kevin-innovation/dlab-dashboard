@@ -208,7 +208,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshTeacher,
   }
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>
+  console.log('AuthProvider 렌더링 상태:', { loading, user: !!user, teacher: !!teacher })
+  
+  if (loading) {
+    console.log('AuthProvider: 로딩 중...')
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p className="ml-4">인증 상태 확인 중...</p>
+      </div>
+    )
+  }
+  
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
