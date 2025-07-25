@@ -162,18 +162,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('사용자 생성에 실패했습니다.')
       }
 
-      // teachers 테이블에 선생님 정보 저장
-      const { error: teacherError } = await supabase
+      // teachers 테이블에 선생님 정보 저장 (타임스탬프는 DB DEFAULT 사용)
+      console.log('Teacher 레코드 생성 중:', { id: authData.user.id, email, name })
+      
+      const { data: teacherData, error: teacherError } = await supabase
         .from('teachers')
         .insert([
           {
             id: authData.user.id,
             email: email,
-            name: name,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            name: name
           }
         ])
+        .select()
+        
+      console.log('Teacher 생성 결과:', { teacherData, teacherError })
 
       if (teacherError) {
         console.error('Teacher 생성 오류:', teacherError)
