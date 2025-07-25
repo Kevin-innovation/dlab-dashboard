@@ -170,22 +170,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
+      console.log('🚀 회원가입 시작:', { email, name })
+      
       // Supabase Auth에 사용자 등록
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
       })
 
+      console.log('Auth 사용자 생성 결과:', { authData, authError })
+
       if (authError) {
-        throw authError
+        console.error('Auth 오류:', authError)
+        throw new Error(`인증 오류: ${authError.message}`)
       }
 
       if (!authData.user) {
         throw new Error('사용자 생성에 실패했습니다.')
       }
 
-      // teachers 테이블에 선생님 정보 저장 (타임스탬프는 DB DEFAULT 사용)
-      console.log('Teacher 레코드 생성 중:', { id: authData.user.id, email, name })
+      console.log('✅ Auth 사용자 생성 성공:', authData.user.id)
+
+      // teachers 테이블에 선생님 정보 저장
+      console.log('📝 Teacher 레코드 생성 중:', { id: authData.user.id, email, name })
       
       const { data: teacherData, error: teacherError } = await supabase
         .from('teachers')
@@ -201,13 +208,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Teacher 생성 결과:', { teacherData, teacherError })
 
       if (teacherError) {
-        console.error('Teacher 생성 오류:', teacherError)
-        throw new Error('선생님 정보 저장에 실패했습니다.')
+        console.error('❌ Teacher 생성 실패:', teacherError)
+        
+        // 일반적인 오류들 체크
+        if (teacherError.code === '23505') {
+          throw new Error('이미 존재하는 이메일입니다.')
+        }
+        if (teacherError.code === '42501') {
+          throw new Error('데이터베이스 권한 오류가 발생했습니다.')
+        }
+        
+        throw new Error(`선생님 정보 저장 실패: ${teacherError.message}`)
       }
 
-      console.log('회원가입 성공:', authData.user)
+      console.log('✅ 전체 회원가입 완료:', { user: authData.user.id, teacher: teacherData })
+      
+      // teacher 정보를 상태에 즉시 설정
+      if (teacherData && teacherData.length > 0) {
+        setTeacher(teacherData[0])
+      }
+      
     } catch (err) {
-      console.error('Supabase signup error:', err)
+      console.error('💥 회원가입 전체 오류:', err)
       if (err instanceof Error) {
         throw err
       }
