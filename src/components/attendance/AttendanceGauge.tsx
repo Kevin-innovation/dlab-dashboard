@@ -32,7 +32,7 @@ export function AttendanceGauge({
   })
 
   const config = COURSE_CONFIGS[courseType]
-  const progressPercentage = totalWeeks > 0 ? (currentWeek / totalWeeks) * 100 : 0
+  const progressPercentage = totalWeeks > 0 ? Math.min((currentWeek / totalWeeks) * 100, 100) : 0
   const feedbackLinePosition = totalWeeks > 0 ? (config.feedbackWeek / totalWeeks) * 100 : 0
   const isNearFeedback = currentWeek >= config.feedbackWeek
   const isComplete = currentWeek >= totalWeeks
@@ -87,7 +87,7 @@ export function AttendanceGauge({
           {/* 진행률 */}
           <div
             className={`h-full transition-all duration-500 ease-out ${getGaugeColor()}`}
-            style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+            style={{ width: `${progressPercentage}%` }}
           />
           
           {/* 피드백 라인 */}
@@ -106,7 +106,7 @@ export function AttendanceGauge({
             {getStatusText()}
           </span>
           <span className="text-xs font-medium text-gray-700">
-            {Math.round(progressPercentage)}%
+            {Math.min(Math.round(progressPercentage), 100)}%
           </span>
         </div>
       </div>

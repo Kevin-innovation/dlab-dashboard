@@ -48,9 +48,46 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
       
       setStudents(studentsData)
       
-      // 출석 진행률을 Map으로 변환
+      // 출석 진행률을 Map으로 변환 및 데이터 정합성 검사
       if (attendanceResponse.success && attendanceResponse.data) {
         const progressMap = AttendanceProgressService.progressArrayToMap(attendanceResponse.data)
+        
+        // 각 학생의 payment_type과 total_weeks가 일치하는지 검사하고 수정
+        const corrections = []
+        for (const student of studentsData) {
+          const progress = progressMap.get(student.id)
+          if (progress) {
+            const studentClass = student.student_classes?.[0]
+            const expectedTotalWeeks = studentClass?.payment_type === 'threemonth' ? 11 : 4
+            
+            if (progress.total_weeks !== expectedTotalWeeks) {
+              console.log(`학생 ${student.name}의 total_weeks 불일치: 현재 ${progress.total_weeks}, 예상 ${expectedTotalWeeks}`)
+              corrections.push({
+                studentId: student.id,
+                newCourseType: studentClass?.payment_type === 'threemonth' ? '3month' : '1month' as CourseType
+              })
+            }
+          }
+        }
+        
+        // 불일치하는 데이터들 자동 수정
+        if (corrections.length > 0) {
+          console.log(`${corrections.length}명의 출석 진행률 데이터 자동 수정 중...`)
+          const correctionPromises = corrections.map(({ studentId, newCourseType }) =>
+            AttendanceProgressService.adjustProgressForCourseType(studentId, newCourseType)
+          )
+          
+          Promise.all(correctionPromises).then(results => {
+            const successCount = results.filter(r => r.success).length
+            console.log(`${successCount}/${corrections.length}명 데이터 수정 완료`)
+            
+            // 수정된 데이터로 다시 로드
+            if (successCount > 0) {
+              setTimeout(() => fetchStudents(), 1000)
+            }
+          })
+        }
+        
         setAttendanceProgressMap(progressMap)
       }
     } catch (err) {
@@ -171,13 +208,16 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
                         const studentClass = student.student_classes?.[0]
                         const courseType: CourseType = studentClass?.payment_type === 'threemonth' ? '3month' : '1month'
                         
+                        // 실제 코스 타입에 맞는 total_weeks 계산
+                        const correctTotalWeeks = courseType === '3month' ? 11 : 4
+                        
                         return (
                           <div className="mt-3">
                             <AttendanceGauge
                               studentId={student.id}
                               studentName={student.name}
                               currentWeek={progress.current_week}
-                              totalWeeks={progress.total_weeks}
+                              totalWeeks={correctTotalWeeks}
                               courseType={courseType}
                               onUpdate={(newWeek) => handleAttendanceUpdate(student.id, newWeek)}
                               className="w-full"
