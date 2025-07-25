@@ -58,13 +58,14 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
           const progress = progressMap.get(student.id)
           if (progress) {
             const studentClass = student.student_classes?.[0]
-            const expectedTotalWeeks = studentClass?.payment_type === 'threemonth' ? 11 : 4
+            const paymentType = studentClass?.payment_type
+            const expectedTotalWeeks = (paymentType === 'threemonth' || paymentType === '3month' || paymentType !== 'monthly') ? 11 : 4
             
             if (progress.total_weeks !== expectedTotalWeeks) {
               console.log(`학생 ${student.name}의 total_weeks 불일치: 현재 ${progress.total_weeks}, 예상 ${expectedTotalWeeks}`)
               corrections.push({
                 studentId: student.id,
-                newCourseType: studentClass?.payment_type === 'threemonth' ? '3month' : '1month' as CourseType
+                newCourseType: (paymentType === 'threemonth' || paymentType === '3month' || paymentType !== 'monthly') ? '3month' : '1month' as CourseType
               })
             }
           }
@@ -204,9 +205,10 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
                         const progress = attendanceProgressMap.get(student.id)
                         if (!progress) return null
                         
-                        // payment_type에서 course_type 결정
+                        // payment_type에서 course_type 결정 (다양한 3개월 표기 방식 처리)
                         const studentClass = student.student_classes?.[0]
-                        const courseType: CourseType = studentClass?.payment_type === 'threemonth' ? '3month' : '1month'
+                        const paymentType = studentClass?.payment_type
+                        const courseType: CourseType = (paymentType === 'threemonth' || paymentType === '3month' || paymentType !== 'monthly') ? '3month' : '1month'
                         
                         // 실제 코스 타입에 맞는 total_weeks 계산
                         const correctTotalWeeks = courseType === '3month' ? 11 : 4
