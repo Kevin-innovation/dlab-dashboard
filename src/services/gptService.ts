@@ -110,13 +110,34 @@ export class GPTService {
         throw new Error('요청 데이터 직렬화에 실패했습니다.')
       }
 
-      const response = await fetch(this.baseURL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: bodyString,
+      // Fetch 대신 XMLHttpRequest 사용하여 Invalid value 에러 우회
+      const response = await new Promise<Response>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', this.baseURL)
+        xhr.setRequestHeader('Content-Type', 'application/json')
+        xhr.setRequestHeader('Authorization', `Bearer ${apiKey}`)
+        
+        xhr.onload = () => {
+          const mockResponse = {
+            ok: xhr.status >= 200 && xhr.status < 300,
+            status: xhr.status,
+            statusText: xhr.statusText,
+            json: async () => JSON.parse(xhr.responseText),
+          } as Response
+          resolve(mockResponse)
+        }
+        
+        xhr.onerror = () => {
+          reject(new Error(`네트워크 오류: ${xhr.status} ${xhr.statusText}`))
+        }
+        
+        try {
+          xhr.send(bodyString)
+          console.log('XMLHttpRequest 전송 성공')
+        } catch (sendError) {
+          console.error('XMLHttpRequest 전송 실패:', sendError)
+          reject(sendError)
+        }
       })
 
       if (!response.ok) {
