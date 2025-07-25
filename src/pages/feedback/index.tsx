@@ -19,6 +19,8 @@ import {
   FeedbackHistory,
 } from '../../types/feedback'
 import { StudentWithClass } from '../../types/student'
+import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
 
 interface APIKeySettingsProps {
   isOpen: boolean
@@ -110,68 +112,9 @@ function APIKeySettings({ isOpen, onClose, onSave, currentApiKey }: APIKeySettin
 }
 
 export default function FeedbackPage() {
-  const [students] = useState<StudentWithClass[]>([
-    {
-      id: '1',
-      name: '김철수',
-      parent_name: '김철수 아버지',
-      parent_phone: '010-1234-5678',
-      grade: '중학교 1학년',
-      notes: '수학에 관심이 많음',
-      payment_day: 15,
-      class_type: '1:1' as const,
-      class_duration: 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      student_classes: [
-        {
-          class_id: 'class-1',
-          student_id: '1',
-          payment_type: 'monthly' as const,
-          robotics_option: true,
-          payment_day: 15,
-          robotics_day: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          classes: {
-            name: '파이썬 기초',
-            type: '1:1' as const,
-            duration: '1 hour',
-          },
-        },
-      ],
-    },
-    {
-      id: '2',
-      name: '이영희',
-      parent_name: '이영희 어머니',
-      parent_phone: '010-2345-6789',
-      grade: '중학교 2학년',
-      notes: '게임 개발에 관심있음',
-      payment_day: 1,
-      class_type: 'group' as const,
-      class_duration: 1.5,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      student_classes: [
-        {
-          class_id: 'class-2',
-          student_id: '2',
-          payment_type: 'quarterly' as const,
-          robotics_option: false,
-          payment_day: 1,
-          robotics_day: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          classes: {
-            name: '자바스크립트',
-            type: 'group' as const,
-            duration: '1.5 hours',
-          },
-        },
-      ],
-    },
-  ])
+  const { teacher } = useAuth()
+  const [students, setStudents] = useState<StudentWithClass[]>([])
+  const [loading, setLoading] = useState(true)
 
   const [templates] = useState<FeedbackTemplate[]>(
     DEFAULT_TEMPLATES.map((template, index) => ({
@@ -212,7 +155,46 @@ export default function FeedbackPage() {
 
     // 피드백 히스토리 로드
     setFeedbackHistory(FeedbackHistoryService.getHistory())
-  }, [])
+
+    // 학생 데이터 로드
+    if (teacher) {
+      fetchStudents()
+    }
+  }, [teacher])
+
+  async function fetchStudents() {
+    try {
+      setLoading(true)
+
+      if (!teacher) {
+        throw new Error('로그인 정보를 확인할 수 없습니다.')
+      }
+
+      const { data, error } = await supabase
+        .from('students')
+        .select(`
+          *,
+          student_classes (
+            *,
+            classes (
+              name,
+              type,
+              duration
+            )
+          )
+        `)
+        .eq('teacher_id', teacher.id)
+        .order('name')
+
+      if (error) throw error
+
+      setStudents((data as any) || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '학생 데이터를 불러오는데 실패했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleApiKeySave = (newApiKey: string) => {
     setApiKey(newApiKey)
@@ -301,6 +283,8 @@ export default function FeedbackPage() {
     navigator.clipboard.writeText(generatedFeedback)
     alert('피드백이 클립보드에 복사되었습니다.')
   }
+
+  if (loading) return <div className="text-center py-8">로딩 중...</div>
 
   return (
     <div className="p-6 space-y-6">

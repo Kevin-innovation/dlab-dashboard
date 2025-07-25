@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { StudentWithClass } from '../../types/student'
+import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
 import {
   WeeklyStatistics,
   MonthlyStatistics,
@@ -209,7 +211,7 @@ function PerformanceGauge({ title, current, target, unit = '' }: PerformanceGaug
 }
 
 export default function StatisticsPage() {
-  const [, setStudents] = useState<StudentWithClass[]>([])
+  const [students, setStudents] = useState<StudentWithClass[]>([])
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStatistics | null>(null)
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStatistics | null>(null)
   const [performance, setPerformance] = useState<StatisticsPerformance | null>(null)
@@ -217,92 +219,23 @@ export default function StatisticsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
+  const { teacher } = useAuth()
 
   useEffect(() => {
-    fetchDataAndCalculateStatistics()
-  }, [])
+    if (teacher) {
+      fetchDataAndCalculateStatistics()
+    }
+  }, [teacher])
 
   async function fetchDataAndCalculateStatistics() {
     try {
       setLoading(true)
 
-      // Temporary: Use mock data for development
-      const mockStudents = [
-        {
-          id: '1',
-          name: '김철수',
-          parent_contact: '010-1234-5678',
-          grade: '중학교 1학년',
-          notes: '수학에 관심이 많음',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          student_classes: [
-            {
-              class_type: '1:1' as const,
-              payment_type: 'monthly' as const,
-              robotics_option: true,
-              class_duration: 60,
-              payment_day: 15,
-              classes: {
-                name: '파이썬 기초',
-                type: '1:1' as const,
-                duration: '1 hour',
-              },
-            },
-          ],
-        },
-        {
-          id: '2',
-          name: '이영희',
-          parent_contact: '010-2345-6789',
-          grade: '중학교 2학년',
-          notes: '게임 개발에 관심있음',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          student_classes: [
-            {
-              class_type: 'group' as const,
-              payment_type: 'quarterly' as const,
-              robotics_option: false,
-              class_duration: 90,
-              payment_day: 1,
-              classes: {
-                name: '자바스크립트',
-                type: 'group' as const,
-                duration: '1.5 hours',
-              },
-            },
-          ],
-        },
-        {
-          id: '3',
-          name: '박민수',
-          parent_contact: '010-3456-7890',
-          grade: '고등학교 1학년',
-          notes: '웹 개발 희망',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          student_classes: [
-            {
-              class_type: 'group' as const,
-              payment_type: 'monthly' as const,
-              robotics_option: true,
-              class_duration: 120,
-              payment_day: 10,
-              classes: {
-                name: 'HTML/CSS',
-                type: 'group' as const,
-                duration: '2 hours',
-              },
-            },
-          ],
-        },
-      ]
+      if (!teacher) {
+        throw new Error('로그인 정보를 확인할 수 없습니다.')
+      }
 
-      setStudents(mockStudents as any)
-
-      // TODO: Uncomment when Supabase is properly configured
-      /*
+      // 실제 Supabase 데이터 조회
       const { data, error } = await supabase
         .from('students')
         .select(`
@@ -316,25 +249,26 @@ export default function StatisticsPage() {
             )
           )
         `)
+        .eq('teacher_id', teacher.id)
         .order('name')
       
       if (error) throw error
       
-      setStudents(data || [])
-      */
+      const studentsData = (data as any) || []
+      setStudents(studentsData)
 
       // 통계 계산
-      const weeklyStatistics = StatisticsCalculator.calculateWeeklyStatistics(mockStudents as any)
-      const monthlyStatistics = StatisticsCalculator.calculateMonthlyStatistics(mockStudents as any)
+      const weeklyStatistics = StatisticsCalculator.calculateWeeklyStatistics(studentsData)
+      const monthlyStatistics = StatisticsCalculator.calculateMonthlyStatistics(studentsData)
 
       // 성과 지표 계산 (목표값은 임시 설정)
       const performanceMetrics = StatisticsCalculator.calculatePerformanceMetrics(
-        mockStudents as any,
+        studentsData,
         { students: 30, revenue: 3000000, attendance: 90 }
       )
 
       // 차트 데이터 생성
-      const charts = StatisticsCalculator.generateChartData(mockStudents as any)
+      const charts = StatisticsCalculator.generateChartData(studentsData)
 
       setWeeklyStats(weeklyStatistics)
       setMonthlyStats(monthlyStatistics)
