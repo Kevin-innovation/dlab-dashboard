@@ -310,9 +310,6 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
 
             // 학생들을 요일별로 분류 (수업 요일 기준)
             students.forEach(student => {
-              const studentClass = student.student_classes?.[0]
-              const classInfo = studentClass?.classes
-              
               // 수업 요일이 있는 경우 해당 요일에 추가 (임시로 랜덤 배치)
               const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
               const randomDay = days[Math.floor(Math.random() * days.length)] as keyof typeof dayGroups
