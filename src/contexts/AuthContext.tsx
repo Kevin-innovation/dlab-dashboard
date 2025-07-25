@@ -112,6 +112,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setTeacher(null)
       }
+      
+      // 중요: 인증 상태 변경 후 로딩 완료
+      console.log('AuthContext: onAuthStateChange 로딩 완료')
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()

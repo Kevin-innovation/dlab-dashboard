@@ -18,6 +18,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginForm />} />
+          <Route index element={<Navigate to="/login" replace />} />
           <Route
             path="/"
             element={
