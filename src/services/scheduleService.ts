@@ -39,15 +39,13 @@ export class ScheduleService {
     try {
       const { data: scheduleResult, error: scheduleError } = await supabase
         .from('schedules')
-        .insert([
-          {
-            teacher_id: teacherId,
-            class_id: scheduleData.class_id,
-            day_of_week: scheduleData.day_of_week,
-            start_time: scheduleData.start_time,
-            status: scheduleData.status || 'active'
-          }
-        ])
+        .insert({
+          teacher_id: teacherId,
+          class_id: scheduleData.class_id,
+          day_of_week: scheduleData.day_of_week,
+          start_time: scheduleData.start_time,
+          status: scheduleData.status || 'active'
+        })
         .select()
         .single()
 

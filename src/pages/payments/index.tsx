@@ -170,6 +170,7 @@ export default function PaymentsPage() {
           )
         `
         )
+        .eq('teacher_id', teacher?.id)
         .order('name')
 
       if (error) throw error

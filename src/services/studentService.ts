@@ -48,15 +48,13 @@ export class StudentService {
         // 새 클래스 생성
         const { data: newClass, error: classError } = await supabase
           .from('classes')
-          .insert([
-            {
-              teacher_id: teacherId,
-              name: studentData.subject,
-              type: studentData.class_type,
-              subject: studentData.subject,
-              duration: studentData.class_duration
-            }
-          ])
+          .insert({
+            teacher_id: teacherId,
+            name: studentData.subject,
+            type: studentData.class_type,
+            subject: studentData.subject,
+            duration: `${studentData.class_duration}시간`
+          })
           .select()
           .single()
 
@@ -71,16 +69,14 @@ export class StudentService {
       // 3. student_classes 연결 테이블에 정보 저장
       const { error: studentClassError } = await supabase
         .from('student_classes')
-        .insert([
-          {
-            student_id: studentResult.id,
-            class_id: classId,
-            payment_type: studentData.payment_type,
-            payment_day: studentData.payment_day,
-            robotics_option: studentData.robotics_option,
-            robotics_day: studentData.robotics_day
-          }
-        ])
+        .insert({
+          student_id: studentResult.id,
+          class_id: classId,
+          payment_type: studentData.payment_type,
+          payment_day: studentData.payment_day,
+          robotics_option: studentData.robotics_option || false,
+          robotics_day: studentData.robotics_day || null
+        })
 
       if (studentClassError) {
         console.error('학생-클래스 연결 오류:', studentClassError)
