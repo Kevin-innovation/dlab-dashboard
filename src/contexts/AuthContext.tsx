@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTeacher(teacherData || {
             id: currentUser.id,
             name: currentUser.email?.split('@')[0] || '선생님',
-            email: currentUser.email,
+            email: currentUser.email || '',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setTeacher(teacherData || {
               id: currentUser.id,
               name: currentUser.email?.split('@')[0] || '선생님',
-              email: currentUser.email,
+              email: currentUser.email || '',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
