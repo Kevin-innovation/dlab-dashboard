@@ -22,10 +22,14 @@ export function LoginForm() {
     setLoading(true)
 
     try {
+      console.log('LoginForm: signIn 호출 시작')
       await signIn(email, password)
+      console.log('LoginForm: signIn 완료, 대시보드로 이동 중...')
       // 로그인 성공 시 대시보드로 리다이렉션
       navigate('/dashboard')
+      console.log('LoginForm: navigate 호출 완료')
     } catch (err) {
+      console.error('LoginForm: signIn 에러:', err)
       setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)

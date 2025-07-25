@@ -99,12 +99,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 인증 상태 변경 구독
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('AuthContext: 인증 상태 변경됨', { event, session })
       const currentUser = session?.user ?? null
       setUser(currentUser)
 
       if (currentUser?.email) {
+        console.log('AuthContext: Teacher 정보 가져오는 중...', currentUser.email)
         const teacherData = await fetchTeacher(currentUser.email, currentUser.id)
+        console.log('AuthContext: Teacher 정보 설정됨', teacherData)
         setTeacher(teacherData)
       } else {
         setTeacher(null)
@@ -135,9 +138,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       console.log('로그인 성공:', data)
+      console.log('signIn 함수 정상 완료 - 에러 없음')
+      
     } catch (err) {
       console.error('Supabase auth error:', err)
-      throw new Error('로그인 중 오류가 발생했습니다.')
+      throw err // 원본 에러를 다시 던지기
     }
   }
 
