@@ -26,17 +26,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('fetchTeacher 시작:', { userEmail, userId })
       
-      // 실제 DB에서 teacher 정보 조회 (5초 타임아웃)
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000)
-      
-      const { data, error } = await supabase
+      // 실제 DB에서 teacher 정보 조회 (3초 타임아웃)
+      const teacherQuery = supabase
         .from('teachers')
         .select('*')
         .eq('email', userEmail)
         .single()
       
-      clearTimeout(timeoutId)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          console.log('fetchTeacher 타임아웃 - 3초 초과')
+          reject(new Error('TIMEOUT'))
+        }, 3000)
+      })
+      
+      const { data, error } = await Promise.race([teacherQuery, timeoutPromise]) as any
       console.log('fetchTeacher DB 응답:', { data, error })
       
       if (error && error.code === 'PGRST116') {
@@ -75,9 +79,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('fetchTeacher 에러:', error)
       
-      // AbortError (타임아웃)인 경우
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.error('fetchTeacher 타임아웃 - 5초 초과')
+      // 타임아웃 에러인 경우
+      if (error instanceof Error && error.message === 'TIMEOUT') {
+        console.error('❌ fetchTeacher 타임아웃 - 3초 초과')
+        return null
       }
       
       return null

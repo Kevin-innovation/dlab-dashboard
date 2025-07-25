@@ -20,16 +20,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return null
   }
 
-  // 사용자는 있지만 선생님 정보가 없는 경우
+  // 사용자는 있지만 선생님 정보가 없는 경우 - 로딩 표시
   if (user && !teacher) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center p-8 bg-white rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">접근 권한이 없습니다</h2>
-          <p className="text-gray-600 mb-4">선생님 계정으로만 접근할 수 있습니다.</p>
-          <button onClick={() => navigate('/login')} className="btn-primary">
-            로그인 페이지로 돌아가기
-          </button>
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h2 className="text-lg font-semibold text-gray-700 mb-2">선생님 정보 확인 중...</h2>
+          <p className="text-gray-500 text-sm">잠시만 기다려주세요</p>
         </div>
       </div>
     )
