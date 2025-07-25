@@ -93,7 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (currentUser?.email) {
         const teacherData = await fetchTeacher(currentUser.email, currentUser.id)
-        setTeacher(teacherData)
+        // teacherData가 null이어도 빈 객체로 fallback하여 무한 로딩 방지
+        setTeacher(teacherData || {
+          id: currentUser.id,
+          name: currentUser.email?.split('@')[0] || '선생님',
+          email: currentUser.email,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
       } else {
         setTeacher(null)
       }
@@ -112,7 +119,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('AuthContext: Teacher 정보 가져오는 중...', currentUser.email)
           const teacherData = await fetchTeacher(currentUser.email, currentUser.id)
           console.log('AuthContext: Teacher 정보 설정됨', teacherData)
-          setTeacher(teacherData)
+          // teacherData가 null이어도 빈 객체로 fallback하여 무한 로딩 방지
+          setTeacher(teacherData || {
+            id: currentUser.id,
+            name: currentUser.email?.split('@')[0] || '선생님',
+            email: currentUser.email,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
         } else {
           setTeacher(null)
         }
