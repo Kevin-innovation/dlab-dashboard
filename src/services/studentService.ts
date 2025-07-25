@@ -257,7 +257,20 @@ export class StudentService {
    */
   static async deleteStudent(studentId: string): Promise<void> {
     try {
-      // student_classes 먼저 삭제 (외래키 제약조건)
+      // 삭제할 학생이 소속된 클래스 ID들을 먼저 조회
+      const { data: studentClasses, error: queryError } = await supabase
+        .from('student_classes')
+        .select('class_id')
+        .eq('student_id', studentId)
+
+      if (queryError) {
+        console.error('학생 클래스 조회 오류:', queryError)
+        throw new Error('학생 클래스 정보 조회에 실패했습니다.')
+      }
+
+      const classIds = studentClasses?.map(sc => sc.class_id) || []
+
+      // student_classes 삭제 (외래키 제약조건)
       const { error: studentClassError } = await supabase
         .from('student_classes')
         .delete()
@@ -277,6 +290,34 @@ export class StudentService {
       if (studentError) {
         console.error('학생 삭제 오류:', studentError)
         throw new Error('학생 정보 삭제에 실패했습니다.')
+      }
+
+      // 고아가 된 스케줄 정리 (다른 학생이 없는 클래스의 스케줄 삭제)
+      for (const classId of classIds) {
+        // 해당 클래스에 다른 학생이 있는지 확인
+        const { data: remainingStudents, error: checkError } = await supabase
+          .from('student_classes')
+          .select('student_id')
+          .eq('class_id', classId)
+          .limit(1)
+
+        if (checkError) {
+          console.error('남은 학생 확인 오류:', checkError)
+          continue // 에러가 있어도 다음 클래스 처리 계속
+        }
+
+        // 다른 학생이 없으면 해당 클래스의 스케줄 삭제
+        if (!remainingStudents || remainingStudents.length === 0) {
+          const { error: scheduleDeleteError } = await supabase
+            .from('schedules')
+            .delete()
+            .eq('class_id', classId)
+
+          if (scheduleDeleteError) {
+            console.error('고아 스케줄 삭제 오류:', scheduleDeleteError)
+            // 스케줄 삭제 실패는 치명적이지 않으므로 계속 진행
+          }
+        }
       }
     } catch (error) {
       console.error('StudentService.deleteStudent 오류:', error)

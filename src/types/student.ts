@@ -4,14 +4,18 @@ export type ClassType = '1:1' | 'group'
 export type ClassDuration = 1 | 1.5 | 2
 export type PaymentType = 'monthly' | 'quarterly'
 export type RoboticsDay = 'wed' | 'sat'
-export type Subject =
-  | '파이썬 기초'
-  | '자바스크립트'
-  | 'HTML/CSS'
-  | '웹개발'
-  | '게임개발'
-  | 'AI/머신러닝'
-  | '로봇공학'
+export type Subject = string
+
+// 기본 제공 과목 리스트 (datalist용)
+export const DEFAULT_SUBJECTS = [
+  '파이썬 기초',
+  '자바스크립트',
+  'HTML/CSS',
+  '웹개발',
+  '게임개발',
+  'AI/머신러닝',
+  '로봇공학'
+] as const
 
 // Supabase 스키마 기반 타입
 export type Student = Tables<'students'>

@@ -3,6 +3,7 @@ import {
   Student,
   CreateStudentInput,
   ClassDuration,
+  DEFAULT_SUBJECTS,
 } from '../../types/student'
 import { useAuth } from '../../contexts/AuthContext'
 import { StudentService } from '../../services/studentService'
@@ -152,22 +153,22 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
           <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
             수업 과목
           </label>
-          <select
+          <input
+            type="text"
             id="subject"
             name="subject"
             value={formData.subject}
             onChange={handleChange}
+            list="subjects"
             required
+            placeholder="수업 과목을 입력하거나 선택하세요"
             className="input-field mt-1"
-          >
-            <option value="파이썬 기초">파이썬 기초</option>
-            <option value="자바스크립트">자바스크립트</option>
-            <option value="HTML/CSS">HTML/CSS</option>
-            <option value="웹개발">웹개발</option>
-            <option value="게임개발">게임개발</option>
-            <option value="AI/머신러닝">AI/머신러닝</option>
-            <option value="로봇공학">로봇공학</option>
-          </select>
+          />
+          <datalist id="subjects">
+            {DEFAULT_SUBJECTS.map(subject => (
+              <option key={subject} value={subject} />
+            ))}
+          </datalist>
         </div>
 
         <div>

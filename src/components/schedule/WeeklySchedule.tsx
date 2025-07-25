@@ -94,7 +94,9 @@ export const WeeklySchedule = forwardRef<{ fetchSchedules: () => void }, WeeklyS
                 const daySchedules = getSchedulesForDayAndTime(dayIndex, time)
                 return (
                   <td key={dayIndex} className="border p-2">
-                    {daySchedules.map((scheduleData) => (
+                    {daySchedules
+                      .filter(scheduleData => scheduleData.students && scheduleData.students.length > 0)
+                      .map((scheduleData) => (
                       <div
                         key={scheduleData.id}
                         className={`mb-1 p-3 rounded cursor-pointer transition-colors hover:opacity-80 ${CLASS_STATUS_COLORS[scheduleData.status as ClassStatus]}`}
