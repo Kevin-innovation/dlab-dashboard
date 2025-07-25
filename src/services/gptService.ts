@@ -65,34 +65,58 @@ export class GPTService {
         apiKeyPrefix: apiKey.substring(0, 7) + '...'
       })
 
+      // 각 값이 유효한지 검증
+      const safeModel = model || 'gpt-4o-mini'
+      const safePrompt = prompt || '기본 피드백 요청'
+      const safeMaxTokens = GPT_API_CONFIG.max_tokens || 500
+      const safeTemperature = GPT_API_CONFIG.temperature ?? 0.7
+      const safePresencePenalty = GPT_API_CONFIG.presence_penalty ?? 0.1
+      const safeFrequencyPenalty = GPT_API_CONFIG.frequency_penalty ?? 0.1
+
+      console.log('안전한 값들 확인:', {
+        safeModel,
+        promptLength: safePrompt.length,
+        safeMaxTokens,
+        safeTemperature,
+        safePresencePenalty,
+        safeFrequencyPenalty
+      })
+
       const requestBody = {
-        model,
+        model: safeModel,
         messages: [
           {
             role: 'system',
-            content:
-              '당신은 코딩학원의 전문 강사입니다. 학생들의 학습 상황을 바탕으로 학부모에게 전달할 정중하고 건설적인 피드백을 작성해주세요. 한국어로 답변하며, 구체적이고 실용적인 조언을 포함해주세요.',
+            content: '당신은 코딩학원의 전문 강사입니다. 학생들의 학습 상황을 바탕으로 학부모에게 전달할 정중하고 건설적인 피드백을 작성해주세요. 한국어로 답변하며, 구체적이고 실용적인 조언을 포함해주세요.',
           },
           {
             role: 'user',
-            content: prompt,
+            content: safePrompt,
           },
         ],
-        max_tokens: GPT_API_CONFIG.max_tokens,
-        temperature: GPT_API_CONFIG.temperature,
-        presence_penalty: GPT_API_CONFIG.presence_penalty,
-        frequency_penalty: GPT_API_CONFIG.frequency_penalty,
+        max_tokens: safeMaxTokens,
+        temperature: safeTemperature,
+        presence_penalty: safePresencePenalty,
+        frequency_penalty: safeFrequencyPenalty,
       }
 
-      console.log('요청 body 검증:', JSON.stringify(requestBody).substring(0, 200) + '...')
+      // JSON 직렬화 테스트
+      let bodyString
+      try {
+        bodyString = JSON.stringify(requestBody)
+        console.log('요청 body 직렬화 성공, 길이:', bodyString.length)
+      } catch (serializeError) {
+        console.error('JSON 직렬화 실패:', serializeError)
+        throw new Error('요청 데이터 직렬화에 실패했습니다.')
+      }
 
       const response = await fetch(this.baseURL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
-        body: JSON.stringify(requestBody),
+        body: bodyString,
       })
 
       if (!response.ok) {
