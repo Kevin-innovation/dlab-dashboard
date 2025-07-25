@@ -17,6 +17,7 @@ export class StudentService {
           name: studentData.name,
           parent_name: studentData.parent_name,
           parent_phone: studentData.parent_phone,
+          parent_contact: studentData.parent_phone, // 기존 컬럼과의 호환성
           grade: studentData.grade,
           notes: studentData.notes || null
         })
