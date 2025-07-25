@@ -33,6 +33,12 @@ export function SchedulePage() {
     }
   }
 
+  const handleScheduleEdit = (scheduleData: ScheduleWithClass) => {
+    setSelectedSchedule(scheduleData)
+    setShowClassForm(true)
+    setShowAttendanceForm(false)
+  }
+
   const handleClassFormSubmit = () => {
     setShowClassForm(false)
     setSelectedSchedule(undefined)
@@ -130,7 +136,11 @@ export function SchedulePage() {
           />
         </div>
       ) : (
-        <WeeklySchedule ref={weeklyScheduleRef} onScheduleClick={handleScheduleClick} />
+        <WeeklySchedule 
+          ref={weeklyScheduleRef} 
+          onScheduleClick={handleScheduleClick}
+          onScheduleEdit={handleScheduleEdit}
+        />
       )}
     </div>
   )

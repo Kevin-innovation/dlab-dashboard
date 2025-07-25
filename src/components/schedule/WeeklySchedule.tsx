@@ -10,10 +10,11 @@ import { ScheduleService, ScheduleWithClass } from '../../services/scheduleServi
 
 interface WeeklyScheduleProps {
   onScheduleClick: (scheduleData: ScheduleWithClass) => void
+  onScheduleEdit?: (scheduleData: ScheduleWithClass) => void
 }
 
 export const WeeklySchedule = forwardRef<{ fetchSchedules: () => void }, WeeklyScheduleProps>(
-  ({ onScheduleClick }, ref) => {
+  ({ onScheduleClick, onScheduleEdit }, ref) => {
     const [schedules, setSchedules] = useState<ScheduleWithClass[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -116,10 +117,22 @@ export const WeeklySchedule = forwardRef<{ fetchSchedules: () => void }, WeeklyS
                           {scheduleData.classes?.type} | {scheduleData.classes?.duration}
                         </div>
                         
-                        {/* 상태 표시 */}
-                        <div className="text-xs opacity-75">
-                          {CLASS_STATUS_LABELS[scheduleData.status as ClassStatus]}
-                        </div>
+                        {/* 상태 표시 또는 수정 버튼 */}
+                        {scheduleData.status === 'active' && onScheduleEdit ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onScheduleEdit(scheduleData)
+                            }}
+                            className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded mt-1 transition-colors"
+                          >
+                            수정
+                          </button>
+                        ) : (
+                          <div className="text-xs opacity-75">
+                            {CLASS_STATUS_LABELS[scheduleData.status as ClassStatus]}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </td>

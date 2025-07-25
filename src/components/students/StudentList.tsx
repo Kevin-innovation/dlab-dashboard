@@ -3,6 +3,7 @@ import { Student, StudentWithClass } from '../../types/student'
 import { useAuth } from '../../contexts/AuthContext'
 import { StudentService } from '../../services/studentService'
 import { AttendanceProgressService } from '../../services/attendanceProgressService'
+import { ScheduleService, ScheduleWithClass } from '../../services/scheduleService'
 import { AttendanceGauge } from '../attendance/AttendanceGauge'
 import { AttendanceProgress, CourseType } from '../../types/attendance'
 
@@ -15,10 +16,11 @@ interface StudentListProps {
 export function StudentList({ onAdd, onEdit }: StudentListProps) {
   const { teacher } = useAuth()
   const [students, setStudents] = useState<StudentWithClass[]>([])
+  const [schedules, setSchedules] = useState<ScheduleWithClass[]>([])
   const [attendanceProgressMap, setAttendanceProgressMap] = useState<Map<string, AttendanceProgress>>(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'all' | 'by_day'>('all')
+  const [viewMode, setViewMode] = useState<'all' | 'by_day'>('by_day')
 
   useEffect(() => {
     if (teacher) {
@@ -37,16 +39,19 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
       setLoading(true)
       setError(null)
 
-      // 학생 목록과 출석 진행률을 병렬로 로드
-      const [studentsData, attendanceResponse] = await Promise.all([
+      // 학생 목록, 출석 진행률, 스케줄을 병렬로 로드
+      const [studentsData, attendanceResponse, schedulesData] = await Promise.all([
         StudentService.getStudentsByTeacher(teacher.id),
-        AttendanceProgressService.getProgressByTeacher(teacher.id)
+        AttendanceProgressService.getProgressByTeacher(teacher.id),
+        ScheduleService.getSchedulesByTeacher(teacher.id)
       ])
 
       console.log('학생 목록 로드됨:', studentsData)
       console.log('출석 진행률 로드됨:', attendanceResponse.data)
+      console.log('스케줄 로드됨:', schedulesData)
       
       setStudents(studentsData)
+      setSchedules(schedulesData)
       
       // 출석 진행률을 Map으로 변환 및 데이터 정합성 검사
       if (attendanceResponse.success && attendanceResponse.data) {
@@ -308,12 +313,40 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
               sunday: { label: '일요일', students: [] as StudentWithClass[] }
             }
 
-            // 학생들을 요일별로 분류 (수업 요일 기준)
+            // 학생들을 요일별로 분류 (실제 수업 스케줄 기준)
             students.forEach(student => {
-              // 수업 요일이 있는 경우 해당 요일에 추가 (임시로 랜덤 배치)
-              const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-              const randomDay = days[Math.floor(Math.random() * days.length)] as keyof typeof dayGroups
-              dayGroups[randomDay].students.push(student)
+              // 해당 학생의 클래스를 찾아서 스케줄 확인
+              const studentClass = student.student_classes?.[0]
+              if (studentClass) {
+                // 해당 클래스의 스케줄을 찾기
+                const classSchedules = schedules.filter(schedule => 
+                  schedule.class_id === studentClass.class_id
+                )
+                
+                if (classSchedules.length > 0) {
+                  // 스케줄이 있는 경우 각 요일에 학생 추가
+                  classSchedules.forEach(schedule => {
+                    const dayIndex = schedule.day_of_week // 0=일, 1=월, 2=화, 3=수, 4=목, 5=금, 6=토
+                    const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+                    const dayKey = dayKeys[dayIndex] as keyof typeof dayGroups
+                    
+                    // 중복 방지: 이미 해당 요일에 있는지 확인
+                    if (!dayGroups[dayKey].students.find(s => s.id === student.id)) {
+                      dayGroups[dayKey].students.push(student)
+                    }
+                  })
+                } else {
+                  // 스케줄이 없는 학생은 일요일에 배치 (미정 그룹)
+                  if (!dayGroups.sunday.students.find(s => s.id === student.id)) {
+                    dayGroups.sunday.students.push(student)
+                  }
+                }
+              } else {
+                // 클래스가 없는 학생도 일요일에 배치 (미정 그룹)
+                if (!dayGroups.sunday.students.find(s => s.id === student.id)) {
+                  dayGroups.sunday.students.push(student)
+                }
+              }
             })
 
             return Object.entries(dayGroups).map(([dayKey, dayData]) => (
