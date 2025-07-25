@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   ChatBubbleLeftRightIcon,
   CogIcon,
@@ -113,6 +114,7 @@ function APIKeySettings({ isOpen, onClose, onSave, currentApiKey }: APIKeySettin
 
 export default function FeedbackPage() {
   const { teacher } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [students, setStudents] = useState<StudentWithClass[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -176,6 +178,19 @@ export default function FeedbackPage() {
       fetchStudents()
     }
   }, [teacher])
+
+  // URL 파라미터에서 학생 ID 확인하여 자동 선택
+  useEffect(() => {
+    const studentId = searchParams.get('studentId')
+    if (studentId && students.length > 0) {
+      const student = students.find(s => s.id === studentId)
+      if (student) {
+        setFormData(prev => ({ ...prev, student_id: studentId }))
+        // URL 파라미터 제거 (한 번만 실행되도록)
+        setSearchParams({})
+      }
+    }
+  }, [students, searchParams, setSearchParams])
 
   async function fetchStudents() {
     try {

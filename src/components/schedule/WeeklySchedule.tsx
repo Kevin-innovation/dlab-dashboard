@@ -96,23 +96,30 @@ export const WeeklySchedule = forwardRef<{ fetchSchedules: () => void }, WeeklyS
                     {daySchedules.map((scheduleData) => (
                       <div
                         key={scheduleData.id}
-                        className={`mb-1 p-2 rounded cursor-pointer transition-colors hover:opacity-80 ${CLASS_STATUS_COLORS[scheduleData.status as ClassStatus]}`}
+                        className={`mb-1 p-3 rounded cursor-pointer transition-colors hover:opacity-80 ${CLASS_STATUS_COLORS[scheduleData.status as ClassStatus]}`}
                         onClick={() => onScheduleClick(scheduleData)}
                       >
-                        <div className="font-bold text-sm">
-                          {scheduleData.classes?.name || '수업'}
+                        {/* 학생 이름 (맨 위, 큰 글씨) */}
+                        {scheduleData.students && scheduleData.students.length > 0 && (
+                          <div className="font-bold text-base mb-1">
+                            {scheduleData.students.map(s => s.name).join(', ')}
+                          </div>
+                        )}
+                        
+                        {/* 수업 과목 (아래, 작은 글씨) */}
+                        <div className="text-sm opacity-90">
+                          {scheduleData.classes?.subject || scheduleData.classes?.type || '수업'}
                         </div>
-                        <div className="text-xs opacity-90">
+                        
+                        {/* 수업 유형 및 시간 */}
+                        <div className="text-xs opacity-75 mt-1">
                           {scheduleData.classes?.type} | {scheduleData.classes?.duration}
                         </div>
+                        
+                        {/* 상태 표시 */}
                         <div className="text-xs opacity-75">
                           {CLASS_STATUS_LABELS[scheduleData.status as ClassStatus]}
                         </div>
-                        {scheduleData.students && scheduleData.students.length > 0 && (
-                          <div className="text-xs mt-1 opacity-75">
-                            학생: {scheduleData.students.map(s => s.name).join(', ')}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </td>

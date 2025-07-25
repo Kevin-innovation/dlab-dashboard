@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { WeeklySchedule } from '../../components/schedule/WeeklySchedule'
 import { ClassForm } from '../../components/schedule/ClassForm'
 import { AttendanceForm } from '../../components/schedule/AttendanceForm'
@@ -6,6 +7,7 @@ import { ScheduleWithClass } from '../../services/scheduleService'
 import { ChevronLeftIcon } from '@heroicons/react/24/outline'
 
 export function SchedulePage() {
+  const navigate = useNavigate()
   const [showClassForm, setShowClassForm] = useState(false)
   const [showAttendanceForm, setShowAttendanceForm] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleWithClass | undefined>()
@@ -19,9 +21,16 @@ export function SchedulePage() {
   }
 
   const handleScheduleClick = (scheduleData: ScheduleWithClass) => {
-    setSelectedSchedule(scheduleData)
-    setShowAttendanceForm(true)
-    setShowClassForm(false)
+    // 수업에 등록된 첫 번째 학생 선택하여 피드백 탭으로 이동
+    if (scheduleData.students && scheduleData.students.length > 0) {
+      const firstStudent = scheduleData.students[0]
+      navigate(`/feedback?studentId=${firstStudent.id}`)
+    } else {
+      // 학생이 없는 경우 기존 출석 관리 모드로 처리
+      setSelectedSchedule(scheduleData)
+      setShowAttendanceForm(true)
+      setShowClassForm(false)
+    }
   }
 
   const handleClassFormSubmit = () => {

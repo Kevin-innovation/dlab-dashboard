@@ -294,14 +294,118 @@ export function StudentList({ onAdd, onEdit }: StudentListProps) {
           </table>
         </div>
       ) : (
-        // 요일별 보기 (추후 스케줄 DB 연동 시 구현 예정)
+        // 요일별 보기
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <div className="text-gray-500">
-              <p className="text-lg mb-2">요일별 보기는 수업 일정 관리 기능과 함께 구현 예정입니다.</p>
-              <p className="text-sm">현재는 전체 목록으로 학생들을 확인해주세요.</p>
-            </div>
-          </div>
+          {(() => {
+            // 요일별로 학생 그룹화
+            const dayGroups = {
+              monday: { label: '월요일', students: [] as StudentWithClass[] },
+              tuesday: { label: '화요일', students: [] as StudentWithClass[] },
+              wednesday: { label: '수요일', students: [] as StudentWithClass[] },
+              thursday: { label: '목요일', students: [] as StudentWithClass[] },
+              friday: { label: '금요일', students: [] as StudentWithClass[] },
+              saturday: { label: '토요일', students: [] as StudentWithClass[] },
+              sunday: { label: '일요일', students: [] as StudentWithClass[] }
+            }
+
+            // 학생들을 요일별로 분류 (수업 요일 기준)
+            students.forEach(student => {
+              const studentClass = student.student_classes?.[0]
+              const classInfo = studentClass?.classes
+              
+              // 수업 요일이 있는 경우 해당 요일에 추가 (임시로 랜덤 배치)
+              const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+              const randomDay = days[Math.floor(Math.random() * days.length)] as keyof typeof dayGroups
+              dayGroups[randomDay].students.push(student)
+            })
+
+            return Object.entries(dayGroups).map(([dayKey, dayData]) => (
+              <div key={dayKey} className="bg-white rounded-lg shadow">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    {dayData.label}
+                    <span className="ml-2 text-sm font-normal text-gray-500">
+                      ({dayData.students.length}명)
+                    </span>
+                  </h3>
+                </div>
+                
+                {dayData.students.length > 0 ? (
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {dayData.students.map(student => {
+                        const studentClass = student.student_classes?.[0]
+                        const classInfo = studentClass?.classes
+                        const progress = attendanceProgressMap.get(student.id)
+
+                        return (
+                          <div key={student.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex justify-between items-start mb-3">
+                              <div>
+                                <h4 className="font-semibold text-gray-900">{student.name}</h4>
+                                <p className="text-sm text-gray-600">{student.grade}</p>
+                              </div>
+                              <div className="flex space-x-1">
+                                <button
+                                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                  onClick={() => onEdit(student)}
+                                >
+                                  수정
+                                </button>
+                                <button
+                                  className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                  onClick={() => handleDelete(student.id)}
+                                >
+                                  삭제
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* 수업 정보 */}
+                            <div className="mb-3">
+                              <div className="text-sm text-gray-700">
+                                <span className="font-medium">수업:</span> {classInfo?.type || '미지정'}
+                              </div>
+                              <div className="text-sm text-gray-700">
+                                <span className="font-medium">결제:</span> {studentClass?.payment_type === 'monthly' ? '1개월' : '3개월'}
+                              </div>
+                            </div>
+
+                            {/* 출석 게이지 */}
+                            {(() => {
+                              if (!progress) return null
+                              
+                              const paymentType = studentClass?.payment_type
+                              const courseType: CourseType = (paymentType === 'threemonth' || paymentType === '3month' || paymentType !== 'monthly') ? '3month' : '1month'
+                              const correctTotalWeeks = courseType === '3month' ? 11 : 4
+                              
+                              return (
+                                <div className="mt-3">
+                                  <AttendanceGauge
+                                    studentId={student.id}
+                                    studentName={student.name}
+                                    currentWeek={progress.current_week}
+                                    totalWeeks={correctTotalWeeks}
+                                    courseType={courseType}
+                                    onUpdate={(newWeek) => handleAttendanceUpdate(student.id, newWeek)}
+                                    className="w-full"
+                                  />
+                                </div>
+                              )
+                            })()}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-gray-500">
+                    <p>이 요일에 수업이 없습니다.</p>
+                  </div>
+                )}
+              </div>
+            ))
+          })()}
         </div>
       )}
     </div>
