@@ -59,10 +59,17 @@ export function SignUpForm({ onBackToLogin }: SignUpFormProps) {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <div className="flex justify-center mb-6">
+            <img
+              className="h-16 w-auto"
+              src="/logo.png"
+              alt="디랩 로고"
+            />
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            선생님 계정 생성
+            디랩 수성 캠퍼스 계정 생성
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">새로운 계정을 만들어 시작하세요</p>
+          <p className="mt-2 text-center text-sm text-gray-600">새로운 선생님 계정을 만들어 시작하세요</p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">

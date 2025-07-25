@@ -40,8 +40,15 @@ export function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <div className="flex justify-center mb-6">
+            <img
+              className="h-16 w-auto"
+              src="/logo.png"
+              alt="디랩 로고"
+            />
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            코딩학원 관리 시스템
+            디랩 수성 캠퍼스 관리 시스템
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">선생님 계정으로 로그인</p>
         </div>
