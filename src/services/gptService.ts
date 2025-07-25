@@ -225,10 +225,30 @@ export class GPTService {
         return false
       }
 
-      const response = await fetch('https://api.openai.com/v1/models', {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-        },
+      // API 키에서 줄바꿈과 공백 제거
+      const cleanApiKey = apiKey.replace(/\s/g, '').trim()
+      console.log('정리된 검증용 API Key:', { originalLength: apiKey.length, cleanedLength: cleanApiKey.length })
+
+      // XMLHttpRequest 사용하여 Invalid value 에러 방지
+      const response = await new Promise<Response>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('GET', 'https://api.openai.com/v1/models')
+        xhr.setRequestHeader('Authorization', `Bearer ${cleanApiKey}`)
+        
+        xhr.onload = () => {
+          const mockResponse = {
+            ok: xhr.status >= 200 && xhr.status < 300,
+            status: xhr.status,
+            statusText: xhr.statusText,
+          } as Response
+          resolve(mockResponse)
+        }
+        
+        xhr.onerror = () => {
+          reject(new Error(`네트워크 오류: ${xhr.status} ${xhr.statusText}`))
+        }
+        
+        xhr.send()
       })
 
       console.log('API 키 검증 응답:', { status: response.status, ok: response.ok })
