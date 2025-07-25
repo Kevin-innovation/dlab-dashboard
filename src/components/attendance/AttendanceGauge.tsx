@@ -81,20 +81,26 @@ export function AttendanceGauge({
   return (
     <div className={`space-y-2 ${className}`}>
       {/* 진행률 바 */}
-      <div className="relative">
+      <div className="relative w-full">
         {/* 배경 바 */}
-        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden relative">
           {/* 진행률 */}
           <div
-            className={`h-full transition-all duration-500 ease-out ${getGaugeColor()}`}
-            style={{ width: `${progressPercentage}%` }}
+            className={`h-full transition-all duration-500 ease-out ${getGaugeColor()} absolute top-0 left-0`}
+            style={{ 
+              width: `${Math.max(0, Math.min(progressPercentage, 100))}%`,
+              maxWidth: '100%'
+            }}
           />
           
           {/* 피드백 라인 */}
           {config.feedbackWeek < totalWeeks && (
             <div
-              className="absolute top-0 bottom-0 w-0.5 bg-orange-400 shadow-lg"
-              style={{ left: `${feedbackLinePosition}%` }}
+              className="absolute top-0 bottom-0 w-0.5 bg-orange-400 shadow-lg z-10"
+              style={{ 
+                left: `${Math.max(0, Math.min(feedbackLinePosition, 100))}%`,
+                maxWidth: '2px'
+              }}
               title={`${config.feedbackWeek}주차: 피드백 시기`}
             />
           )}

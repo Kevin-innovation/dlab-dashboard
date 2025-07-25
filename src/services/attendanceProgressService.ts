@@ -88,12 +88,17 @@ export class AttendanceProgressService {
       }
 
       const current = currentResponse.data
+      
+      // 올바른 총 주차 수 계산 (course_type 기반)
+      const config = COURSE_CONFIGS[current.course_type]
+      const correctTotalWeeks = config.totalWeeks
+      
       let newWeek = current.current_week
 
-      // 액션에 따른 주차 계산
+      // 액션에 따른 주차 계산 (올바른 총 주차 수 사용)
       switch (action) {
         case 'increment':
-          newWeek = Math.min(current.current_week + 1, current.total_weeks)
+          newWeek = Math.min(current.current_week + 1, correctTotalWeeks)
           break
         case 'decrement':
           newWeek = Math.max(current.current_week - 1, 0)
@@ -103,13 +108,14 @@ export class AttendanceProgressService {
           break
         default:
           if (customWeek !== undefined) {
-            newWeek = Math.max(0, Math.min(customWeek, current.total_weeks))
+            newWeek = Math.max(0, Math.min(customWeek, correctTotalWeeks))
           }
       }
 
-      // 데이터베이스 업데이트
+      // 데이터베이스 업데이트 (total_weeks도 함께 수정)
       const updateData: AttendanceProgressUpdate = {
         current_week: newWeek,
+        total_weeks: correctTotalWeeks,
         last_attendance_date: action === 'increment' ? new Date().toISOString() : current.last_attendance_date
       }
 
