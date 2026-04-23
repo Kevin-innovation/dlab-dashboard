@@ -1,8 +1,4 @@
-import {
-  GPTFeedbackRequest,
-  GPTFeedbackResponse,
-  GPT_API_CONFIG,
-} from '../types/feedback'
+import { GPTFeedbackRequest, GPTFeedbackResponse, GPT_API_CONFIG } from '../types/feedback'
 
 export class GPTService {
   private static apiKey: string | null = null
@@ -45,7 +41,7 @@ export class GPTService {
   static async generateFeedback(request: GPTFeedbackRequest): Promise<GPTFeedbackResponse> {
     const rawApiKey = this.getApiKey()
     console.log('API Key check:', { hasApiKey: !!rawApiKey, apiKeyLength: rawApiKey?.length })
-    
+
     if (!rawApiKey) {
       throw new Error(
         'OpenAI API 키가 설정되지 않았습니다. .env.local 파일에 VITE_OPENAI_API_KEY를 설정하거나 설정에서 API 키를 입력해주세요.'
@@ -54,19 +50,22 @@ export class GPTService {
 
     // API 키에서 줄바꿈과 공백 제거
     const apiKey = rawApiKey.replace(/\s/g, '').trim()
-    console.log('정리된 API Key:', { originalLength: rawApiKey.length, cleanedLength: apiKey.length })
+    console.log('정리된 API Key:', {
+      originalLength: rawApiKey.length,
+      cleanedLength: apiKey.length,
+    })
 
     const startTime = Date.now()
 
     try {
       const prompt = this.buildPrompt(request)
       const model = this.getModel()
-      
+
       console.log('GPT 요청 정보:', {
         url: this.baseURL,
         model,
         prompt: prompt.substring(0, 100) + '...',
-        apiKeyPrefix: apiKey.substring(0, 7) + '...'
+        apiKeyPrefix: apiKey.substring(0, 7) + '...',
       })
 
       // 각 값이 유효한지 검증
@@ -83,7 +82,7 @@ export class GPTService {
         safeMaxTokens,
         safeTemperature,
         safePresencePenalty,
-        safeFrequencyPenalty
+        safeFrequencyPenalty,
       })
 
       const requestBody = {
@@ -91,7 +90,8 @@ export class GPTService {
         messages: [
           {
             role: 'system',
-            content: '당신은 코딩학원의 전문 강사입니다. 커스텀 형식(피드백 섹션을 축약하여 한줄로 작성하되, 총 피드백은 3~4줄이 되어야 함.)에 작성된 포맷을 정확하게 참고하여, 오늘날짜로 피드백 작성. ',
+            content:
+              '당신은 코딩학원의 전문 강사입니다. 커스텀 형식이 있으면 그 포맷을 정확히 따르세요. 커스텀 형식이 없으면 아래 형식으로 작성하세요:\n\n{학생명} 학생 {날짜} 수업 보고서\n\n📘 수업 내용:\n- {수업 내용 한 줄}\n\n💬 선생님 피드백:\n- {피드백 문장 1}\n- {피드백 문장 2}\n- {피드백 문장 3}\n\n📌 과제:\n- {과제 내용}\n\n📞 학원 연락처: 053-716-9301\n👨\u200d🏫 담당 선생님: {선생님 이름}\n\n피드백은 3~4개의 bullet point로 작성하고, 격려와 구체적인 내용을 담아주세요.',
           },
           {
             role: 'user',
@@ -120,7 +120,7 @@ export class GPTService {
         xhr.open('POST', this.baseURL)
         xhr.setRequestHeader('Content-Type', 'application/json')
         xhr.setRequestHeader('Authorization', `Bearer ${apiKey}`)
-        
+
         xhr.onload = () => {
           const mockResponse = {
             ok: xhr.status >= 200 && xhr.status < 300,
@@ -130,11 +130,11 @@ export class GPTService {
           } as Response
           resolve(mockResponse)
         }
-        
+
         xhr.onerror = () => {
           reject(new Error(`네트워크 오류: ${xhr.status} ${xhr.statusText}`))
         }
-        
+
         try {
           xhr.send(bodyString)
           console.log('XMLHttpRequest 전송 성공')
@@ -169,13 +169,13 @@ export class GPTService {
       }
     } catch (error) {
       console.error('GPT 피드백 생성 오류:', error)
-      
+
       // TypeError: Failed to execute 'fetch' 에러의 경우
       if (error instanceof TypeError && error.message.includes('fetch')) {
         console.error('Fetch 에러 상세:', {
           name: error.name,
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
         })
         throw new Error('네트워크 요청 중 오류가 발생했습니다. API 키나 설정을 확인해주세요.')
       }
@@ -225,8 +225,11 @@ export class GPTService {
    */
   static async validateApiKey(apiKey: string): Promise<boolean> {
     try {
-      console.log('API 키 검증 시작:', { apiKeyLength: apiKey?.length, apiKeyPrefix: apiKey?.substring(0, 7) + '...' })
-      
+      console.log('API 키 검증 시작:', {
+        apiKeyLength: apiKey?.length,
+        apiKeyPrefix: apiKey?.substring(0, 7) + '...',
+      })
+
       if (!apiKey || apiKey.trim() === '') {
         console.error('API 키가 비어있습니다')
         return false
@@ -234,14 +237,17 @@ export class GPTService {
 
       // API 키에서 줄바꿈과 공백 제거
       const cleanApiKey = apiKey.replace(/\s/g, '').trim()
-      console.log('정리된 검증용 API Key:', { originalLength: apiKey.length, cleanedLength: cleanApiKey.length })
+      console.log('정리된 검증용 API Key:', {
+        originalLength: apiKey.length,
+        cleanedLength: cleanApiKey.length,
+      })
 
       // XMLHttpRequest 사용하여 Invalid value 에러 방지
       const response = await new Promise<Response>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.open('GET', 'https://api.openai.com/v1/models')
         xhr.setRequestHeader('Authorization', `Bearer ${cleanApiKey}`)
-        
+
         xhr.onload = () => {
           const mockResponse = {
             ok: xhr.status >= 200 && xhr.status < 300,
@@ -250,11 +256,11 @@ export class GPTService {
           } as Response
           resolve(mockResponse)
         }
-        
+
         xhr.onerror = () => {
           reject(new Error(`네트워크 오류: ${xhr.status} ${xhr.statusText}`))
         }
-        
+
         xhr.send()
       })
 

@@ -70,74 +70,57 @@ export interface FeedbackHistory {
 // 미리 정의된 템플릿들
 export const DEFAULT_TEMPLATES: Omit<FeedbackTemplate, 'id' | 'created_at' | 'updated_at'>[] = [
   {
-    name: '기본 피드백',
-    description: '일반적인 수업 피드백 템플릿',
-    content: `안녕하세요, {{student_name}} 학부모님.
+    name: '수업 보고서 (기본)',
+    description: '날짜·수업내용·피드백·과제·연락처 포함 표준 보고서',
+    content: `{{student_name}} 학생 {{date}} 수업 보고서
 
-오늘 {{class_name}} 수업에 대한 피드백을 전달드립니다.
+📘 수업 내용:
+- {{lesson_content}}
 
-【수업 내용】
-{{lesson_content}}
-
-【학습 태도 및 성과】
+💬 선생님 피드백:
 {{student_performance}}
 
-【특이사항】
-{{attendance_notes}}
+📌 과제:
+- {{homework_status}}
 
-【숙제 현황】
-{{homework_status}}
-
-감사합니다.`,
+📞 학원 연락처: {{phone_number}}
+👨‍🏫 담당 선생님: {{teacher_name}}`,
   },
   {
-    name: '칭찬 중심 피드백',
-    description: '학생의 장점과 성과를 강조하는 템플릿',
-    content: `안녕하세요, {{student_name}} 학부모님.
+    name: '수업 보고서 (칭찬)',
+    description: '학생의 성과와 장점을 강조하는 보고서',
+    content: `{{student_name}} 학생 {{date}} 수업 보고서
 
-오늘 {{student_name}} 학생이 {{class_name}} 수업에서 보여준 훌륭한 모습을 공유드립니다.
+📘 수업 내용:
+- {{lesson_content}}
 
-【오늘의 하이라이트】
+💬 선생님 피드백:
 {{student_performance}}
+- 오늘 수업 태도가 매우 훌륭했습니다 👏
 
-【수업 진도】
-{{lesson_content}}
+📌 과제:
+- {{homework_status}}
 
-【칭찬할 점】
-- 적극적인 수업 참여
-- 뛰어난 문제 해결 능력
-- 창의적인 아이디어 제시
-
-앞으로도 {{student_name}} 학생의 성장을 함께 지켜보겠습니다.
-
-감사합니다.`,
+📞 학원 연락처: {{phone_number}}
+👨‍🏫 담당 선생님: {{teacher_name}}`,
   },
   {
-    name: '개선 중심 피드백',
-    description: '보완이 필요한 부분을 중심으로 한 템플릿',
-    content: `안녕하세요, {{student_name}} 학부모님.
+    name: '수업 보고서 (복습 권장)',
+    description: '복습 및 가정학습을 강조하는 보고서',
+    content: `{{student_name}} 학생 {{date}} 수업 보고서
 
-{{class_name}} 수업 피드백을 전달드립니다.
+📘 수업 내용:
+- {{lesson_content}}
 
-【수업 내용】
-{{lesson_content}}
-
-【현재 학습 상황】
+💬 선생님 피드백:
 {{student_performance}}
+- 배운 내용을 가정에서 한 번 더 복습하면 큰 도움이 됩니다.
 
-【개선 방향】
-- 기초 개념 복습이 필요합니다
-- 반복 연습을 통한 숙련도 향상
-- 집중력 향상을 위한 휴식 시간 조절
+📌 과제:
+- {{homework_status}}
 
-【가정에서 도움 방법】
-- 매일 10분씩 복습 시간 확보
-- 충분한 수면과 영양 관리
-- 학습 환경 개선
-
-함께 {{student_name}} 학생의 성장을 도와주세요.
-
-감사합니다.`,
+📞 학원 연락처: {{phone_number}}
+👨‍🏫 담당 선생님: {{teacher_name}}`,
   },
 ]
 
