@@ -9,7 +9,6 @@ import {
   ExclamationTriangleIcon,
   BookmarkIcon,
   ChartBarIcon,
-  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline'
 import { GPTService } from '../../services/gptService'
 import { FeedbackHistoryService } from '../../services/feedbackHistoryService'
@@ -150,20 +149,12 @@ export default function FeedbackPage() {
   const [savedCustomFormats, setSavedCustomFormats] = useState<string[]>([])
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [templateName, setTemplateName] = useState('')
-  const [studentSearch, setStudentSearch] = useState('')
-  const [showStudentDropdown, setShowStudentDropdown] = useState(false)
-  const [currentDate] = useState(
-    new Date().toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'long',
-    })
-  )
-  const [shortDate] = useState(() => {
-    const now = new Date()
-    return `${now.getMonth() + 1}월 ${now.getDate()}일`
-  })
+  const [currentDate] = useState(new Date().toLocaleDateString('ko-KR', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    weekday: 'long'
+  }))
 
   useEffect(() => {
     // 로컬 스토리지에서 API 키 로드
@@ -192,9 +183,9 @@ export default function FeedbackPage() {
   useEffect(() => {
     const studentId = searchParams.get('studentId')
     if (studentId && students.length > 0) {
-      const student = students.find((s) => s.id === studentId)
+      const student = students.find(s => s.id === studentId)
       if (student) {
-        setFormData((prev) => ({ ...prev, student_id: studentId }))
+        setFormData(prev => ({ ...prev, student_id: studentId }))
         // URL 파라미터 제거 (한 번만 실행되도록)
         setSearchParams({})
       }
@@ -211,8 +202,7 @@ export default function FeedbackPage() {
 
       const { data, error } = await supabase
         .from('students')
-        .select(
-          `
+        .select(`
           *,
           student_classes (
             *,
@@ -222,8 +212,7 @@ export default function FeedbackPage() {
               duration
             )
           )
-        `
-        )
+        `)
         .eq('teacher_id', teacher.id)
         .order('name')
 
@@ -263,12 +252,12 @@ export default function FeedbackPage() {
       id: Date.now().toString(),
       name: templateName.trim(),
       content: customFormat.trim(),
-      created_at: new Date().toISOString(),
+      created_at: new Date().toISOString()
     }
 
     // 로컬스토리지에서 기존 템플릿들 가져오기
     const savedTemplates = JSON.parse(localStorage.getItem('custom_templates') || '[]')
-
+    
     // 이름 중복 확인
     if (savedTemplates.find((t: any) => t.name === templateName.trim())) {
       alert('이미 존재하는 템플릿 이름입니다.')
@@ -280,11 +269,11 @@ export default function FeedbackPage() {
     if (savedTemplates.length > 20) savedTemplates.pop() // 최대 20개
 
     localStorage.setItem('custom_templates', JSON.stringify(savedTemplates))
-
+    
     // 간단한 형식 목록도 업데이트 (하위 호환성)
     const simpleFormats = savedTemplates.map((t: any) => t.content)
     setSavedCustomFormats(simpleFormats)
-
+    
     setShowSaveDialog(false)
     setTemplateName('')
     alert('커스텀 템플릿이 저장되었습니다.')
@@ -302,9 +291,6 @@ export default function FeedbackPage() {
 
   const selectedStudent = students.find((s) => s.id === formData.student_id)
   const selectedTemplate = templates.find((t) => t.id === formData.template_id)
-  const filteredStudents = students.filter((s) =>
-    s.name.toLowerCase().includes(studentSearch.toLowerCase())
-  )
 
   const handleGenerateFeedback = async () => {
     if (!GPTService.hasApiKey()) {
@@ -361,9 +347,6 @@ export default function FeedbackPage() {
         student_performance: formData.student_performance,
         attendance_notes: formData.attendance_notes || '특이사항 없음',
         homework_status: formData.homework_status || '숙제 완료',
-        date: shortDate,
-        teacher_name: teacher?.name || '선생님',
-        phone_number: '053-716-9301',
       }
 
       const filledTemplate = GPTService.replaceTemplateVariables(
@@ -597,42 +580,18 @@ export default function FeedbackPage() {
               {/* 학생 선택 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">학생 선택</label>
-                <div className="relative">
-                  <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={selectedStudent ? `${selectedStudent.name} - ${selectedStudent.student_classes?.[0]?.classes?.name ?? ''}` : studentSearch}
-                    onChange={(e) => {
-                      setStudentSearch(e.target.value)
-                      setFormData({ ...formData, student_id: '' })
-                      setShowStudentDropdown(true)
-                    }}
-                    onFocus={() => setShowStudentDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowStudentDropdown(false), 150)}
-                    placeholder="학생 검색"
-                    className="input-field w-full pl-9"
-                  />
-                  {showStudentDropdown && filteredStudents.length > 0 && (
-                    <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                      {filteredStudents.map((student) => (
-                        <li
-                          key={student.id}
-                          onMouseDown={() => {
-                            setFormData({ ...formData, student_id: student.id })
-                            setStudentSearch('')
-                            setShowStudentDropdown(false)
-                          }}
-                          className="cursor-pointer px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
-                        >
-                          {student.name}
-                          {student.student_classes?.[0]?.classes?.name && (
-                            <span className="ml-1 text-gray-400">- {student.student_classes[0].classes.name}</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                <select
+                  value={formData.student_id}
+                  onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
+                  className="input-field w-full"
+                >
+                  <option value="">학생을 선택하세요</option>
+                  {students.map((student) => (
+                    <option key={student.id} value={student.id}>
+                      {student.name} - {student.student_classes?.[0]?.classes?.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* 수업 내용 */}
@@ -728,9 +687,7 @@ export default function FeedbackPage() {
                   <ClockIcon className="h-4 w-4" />
                   <span className="text-sm font-medium">오늘 날짜: {currentDate}</span>
                 </div>
-                <p className="text-xs text-blue-600 mt-1">
-                  피드백 생성시 오늘 날짜가 자동으로 반영됩니다.
-                </p>
+                <p className="text-xs text-blue-600 mt-1">피드백 생성시 오늘 날짜가 자동으로 반영됩니다.</p>
               </div>
 
               {/* 커스텀 형식 */}
@@ -754,17 +711,14 @@ export default function FeedbackPage() {
                   rows={3}
                   className="input-field w-full"
                 />
-
+                
                 {/* 저장된 커스텀 형식 목록 */}
                 {savedCustomFormats.length > 0 && (
                   <div className="mt-2">
                     <p className="text-xs text-gray-600 mb-2">저장된 형식:</p>
                     <div className="space-y-1 max-h-32 overflow-y-auto">
                       {savedCustomFormats.map((format, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between bg-gray-50 rounded p-2"
-                        >
+                        <div key={index} className="flex items-center justify-between bg-gray-50 rounded p-2">
                           <button
                             onClick={() => loadCustomFormat(format)}
                             className="text-left text-xs text-gray-700 hover:text-blue-600 flex-1 truncate"
@@ -913,11 +867,11 @@ export default function FeedbackPage() {
                 />
               </div>
               <div className="flex space-x-3 pt-4">
-                <button
+                <button 
                   onClick={() => {
                     setShowSaveDialog(false)
                     setTemplateName('')
-                  }}
+                  }} 
                   className="btn-secondary flex-1"
                 >
                   취소
